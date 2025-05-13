@@ -7,6 +7,7 @@ import Login from '../../pages/Login';
 // Lazy loaded components
 const Dashboard = lazy(() => import('../../pages/Dashboard'));
 const Users = lazy(() => import('../../pages/Users'));
+const Roles = lazy(() => import('../../pages/Roles'));
 const Leads = lazy(() => import('../../pages/Leads'));
 const IncentivePlans = lazy(() => import('../../pages/IncentivePlans'));
 const Deals = lazy(() => import('../../pages/Deals'));
@@ -42,6 +43,7 @@ const AppRoutes: React.FC = () => {
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="users" element={<Users />} />
+          <Route path="roles" element={<Roles />} />
           <Route path="leads" element={<Leads />} />
           <Route path="incentive-plans" element={<IncentivePlans />} />
           <Route path="deals" element={<Deals />} />

@@ -4,7 +4,6 @@ import type {
   ResetPasswordRequest,
   RoleClaimRequest,
   UpdateUserRequest,
-  User,
   UserClaim,
   UserClaimsRequest,
   UserFilters,
@@ -14,7 +13,7 @@ import type {
   UserRolesRequest
 } from '../models/user';
 
-export interface UserService {
+export type UserService = {
   // User CRUD operations
   getUsers(filters?: UserFilters, page?: number, limit?: number): Promise<UserListResponse>;
   getUserById(id: string): Promise<UserResponse>;
@@ -35,4 +34,4 @@ export interface UserService {
   // Password management
   changePassword(request: ChangePasswordRequest): Promise<UserResponseDto>;
   resetPassword(request: ResetPasswordRequest): Promise<UserResponseDto>;
-}
+};

@@ -12,7 +12,7 @@ import type {
   UserResponseDto,
   UserRolesRequest
 } from '../../core/models/user';
-import { UserService } from '../../core/services/UserService';
+import type { UserService } from '../../core/services/UserService';
 import apiClient from '../apiClient';
 
 export class UserServiceImpl implements UserService {

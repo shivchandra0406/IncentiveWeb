@@ -38,7 +38,7 @@ import {
   Refresh as RefreshIcon,
   Key as KeyIcon
 } from '@mui/icons-material';
-import { User, UserFilters } from '../../core/models/user';
+import type { User, UserFilters } from '../../core/models/user';
 import userService from '../../infrastructure/users/UserServiceImpl';
 import UserForm from './UserForm';
 import ResetPasswordForm from './ResetPasswordForm';
@@ -269,6 +269,7 @@ const UsersTable: React.FC = () => {
               color="primary"
               startIcon={<AddIcon />}
               onClick={handleAddUser}
+              sx={{ whiteSpace: 'nowrap' }}
             >
               Add User
             </Button>

@@ -6,26 +6,22 @@ import {
   DialogActions,
   Button,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   FormHelperText,
   Grid,
   Checkbox,
   FormControlLabel,
   Typography,
   Box,
-  Chip,
-  OutlinedInput,
   Tabs,
   Tab,
   CircularProgress,
-  Divider,
   Alert
 } from '@mui/material';
-import { User, CreateUserRequest, UpdateUserRequest } from '../../core/models/user';
+import { Add as AddIcon } from '@mui/icons-material';
+import axios from 'axios';
+import type { User, CreateUserRequest, UpdateUserRequest } from '../../core/models/user';
 import userService from '../../infrastructure/users/UserServiceImpl';
+import RoleForm from '../Roles/RoleForm';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -66,7 +62,7 @@ const UserForm: React.FC<UserFormProps> = ({ open, onClose, onSubmit, user, mode
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [availableRoles, setAvailableRoles] = useState<string[]>([]);
-  const [userClaims, setUserClaims] = useState<{ claimType: string; claimValue: string }[]>([]);
+  const [openRoleForm, setOpenRoleForm] = useState(false);
 
   // Form fields
   const [userName, setUserName] = useState('');
@@ -77,6 +73,7 @@ const UserForm: React.FC<UserFormProps> = ({ open, onClose, onSubmit, user, mode
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [searchRole, setSearchRole] = useState('');
 
   // Form validation
   const [formErrors, setFormErrors] = useState<{
@@ -96,7 +93,6 @@ const UserForm: React.FC<UserFormProps> = ({ open, onClose, onSubmit, user, mode
       if (mode === 'edit' && user) {
         populateForm(user);
         fetchUserRoles(user.id);
-        fetchUserClaims(user.id);
       }
     }
   }, [open, user, mode]);
@@ -125,10 +121,28 @@ const UserForm: React.FC<UserFormProps> = ({ open, onClose, onSubmit, user, mode
 
   const fetchRoles = async () => {
     try {
-      // In a real implementation, this would fetch roles from the API
-      setAvailableRoles(['Admin', 'Manager', 'Agent', 'READONLY']);
+      // Fetch roles from the API
+      const response = await axios.get(
+        'https://localhost:44307/api/Roles',
+        {
+          headers: {
+            'accept': 'text/plain',
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+            'tenantId': 'root'
+          }
+        }
+      );
+
+      if (response.data && Array.isArray(response.data)) {
+        const roleNames = response.data.map((role: { name: string }) => role.name);
+        setAvailableRoles(roleNames);
+      } else {
+        console.error('Invalid response format from roles API:', response.data);
+        setAvailableRoles([]);
+      }
     } catch (err) {
       console.error('Error fetching roles:', err);
+      setAvailableRoles([]);
     }
   };
 
@@ -141,14 +155,7 @@ const UserForm: React.FC<UserFormProps> = ({ open, onClose, onSubmit, user, mode
     }
   };
 
-  const fetchUserClaims = async (userId: string) => {
-    try {
-      const claims = await userService.getUserClaims(userId);
-      setUserClaims(claims);
-    } catch (err) {
-      console.error('Error fetching user claims:', err);
-    }
-  };
+
 
   const validateForm = () => {
     const errors: {
@@ -260,13 +267,38 @@ const UserForm: React.FC<UserFormProps> = ({ open, onClose, onSubmit, user, mode
     }
   };
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
-  const handleRoleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    setSelectedRoles(typeof value === 'string' ? value.split(',') : value);
+  const handleRoleChange = (role: string) => {
+    const currentIndex = selectedRoles.indexOf(role);
+    const newSelectedRoles = [...selectedRoles];
+
+    if (currentIndex === -1) {
+      newSelectedRoles.push(role);
+    } else {
+      newSelectedRoles.splice(currentIndex, 1);
+    }
+
+    setSelectedRoles(newSelectedRoles);
+  };
+
+
+
+  const handleAddRole = (roleName: string) => {
+    // Add the new role to the available roles list
+    if (!availableRoles.includes(roleName)) {
+      setAvailableRoles([...availableRoles, roleName]);
+    }
+
+    // Select the new role
+    if (!selectedRoles.includes(roleName)) {
+      setSelectedRoles([...selectedRoles, roleName]);
+    }
+
+    // Close the role form
+    setOpenRoleForm(false);
   };
 
   return (
@@ -289,7 +321,7 @@ const UserForm: React.FC<UserFormProps> = ({ open, onClose, onSubmit, user, mode
 
         <Tabs value={tabValue} onChange={handleTabChange} aria-label="user form tabs">
           <Tab label="User Details" />
-          <Tab label="Roles & Permissions" />
+          <Tab label="Roles" />
         </Tabs>
 
         <TabPanel value={tabValue} index={0}>
@@ -385,57 +417,150 @@ const UserForm: React.FC<UserFormProps> = ({ open, onClose, onSubmit, user, mode
         </TabPanel>
 
         <TabPanel value={tabValue} index={1}>
-          <FormControl fullWidth error={!!formErrors.roles}>
-            <InputLabel id="roles-select-label">Roles</InputLabel>
-            <Select
-              labelId="roles-select-label"
-              multiple
-              value={selectedRoles}
-              onChange={handleRoleChange}
-              input={<OutlinedInput label="Roles" />}
-              renderValue={(selected) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {(selected as string[]).map((value) => (
-                    <Chip key={value} label={value} />
-                  ))}
-                </Box>
-              )}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="subtitle1">
+              Roles
+            </Typography>
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<AddIcon />}
+              onClick={() => setOpenRoleForm(true)}
+              sx={{
+                fontWeight: 700,
+                px: 2,
+                py: 0.8,
+                borderRadius: '8px',
+                backgroundColor: '#00b8a9',
+                color: 'white',
+                border: 'none',
+                '&:hover': {
+                  backgroundColor: '#00a599',
+                  boxShadow: '0 2px 4px rgba(0,184,169,0.3)',
+                  transform: 'translateY(-1px)'
+                },
+                '&:active': {
+                  backgroundColor: '#00877c',
+                },
+                transition: 'all 0.2s ease-in-out'
+              }}
             >
-              {availableRoles.map((role) => (
-                <MenuItem key={role} value={role}>
-                  {role}
-                </MenuItem>
-              ))}
-            </Select>
-            {formErrors.roles && <FormHelperText>{formErrors.roles}</FormHelperText>}
-          </FormControl>
+              Add Role
+            </Button>
+          </Box>
 
-          {mode === 'edit' && (
-            <Box sx={{ mt: 3 }}>
-              <Typography variant="subtitle1" gutterBottom>
-                User Claims
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
+          <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+            Select one or more roles to assign to this user.
+          </Typography>
 
-              {userClaims.length > 0 ? (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {userClaims.map((claim, index) => (
-                    <Chip
-                      key={index}
-                      label={`${claim.claimType}: ${claim.claimValue}`}
-                      variant="outlined"
+          {formErrors.roles && (
+            <FormHelperText error sx={{ mb: 2 }}>
+              {formErrors.roles}
+            </FormHelperText>
+          )}
+
+          <Box sx={{ position: 'relative', mb: 2 }}>
+            <Box
+              sx={{
+                position: 'absolute',
+                left: 12,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: 'action.active',
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              🔍
+            </Box>
+            <TextField
+              fullWidth
+              placeholder="Search roles..."
+              value={searchRole}
+              onChange={(e) => setSearchRole(e.target.value)}
+              size="small"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  pl: 4,
+                  borderRadius: '4px',
+                  '& fieldset': {
+                    borderColor: '#e0e0e0',
+                  },
+                }
+              }}
+            />
+          </Box>
+
+          <Box
+            sx={{
+              border: '1px solid #e0e0e0',
+              borderRadius: '4px',
+              backgroundColor: '#f9f9f9',
+              maxHeight: '200px',
+              overflowY: 'auto',
+              mb: 2
+            }}
+          >
+            <Box sx={{
+              p: 2,
+              borderBottom: '1px solid #e0e0e0',
+              backgroundColor: '#f5f5f5'
+            }}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={selectedRoles.length === availableRoles.length && availableRoles.length > 0}
+                    onChange={() => {
+                      if (selectedRoles.length === availableRoles.length) {
+                        setSelectedRoles([]);
+                      } else {
+                        setSelectedRoles([...availableRoles]);
+                      }
+                    }}
+                    color="primary"
+                  />
+                }
+                label={<Typography sx={{ fontWeight: 500 }}>Select All</Typography>}
+              />
+            </Box>
+
+            <Box sx={{
+              p: 2,
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 3
+            }}>
+              {availableRoles
+                .filter(role => role.toLowerCase().includes(searchRole.toLowerCase()))
+                .map((role) => (
+                <FormControlLabel
+                  key={role}
+                  control={
+                    <Checkbox
+                      checked={selectedRoles.includes(role)}
+                      onChange={() => handleRoleChange(role)}
                       color="primary"
                     />
-                  ))}
-                </Box>
-              ) : (
-                <Typography variant="body2" color="textSecondary">
-                  No claims assigned to this user.
-                </Typography>
-              )}
+                  }
+                  label={role}
+                  sx={{
+                    m: 0,
+                    minWidth: '150px',
+                  }}
+                />
+              ))}
             </Box>
-          )}
+          </Box>
+
+          {/* Role Form Dialog */}
+          <RoleForm
+            open={openRoleForm}
+            onClose={() => setOpenRoleForm(false)}
+            onSuccess={handleAddRole}
+          />
         </TabPanel>
+
+
       </DialogContent>
 
       <DialogActions>
