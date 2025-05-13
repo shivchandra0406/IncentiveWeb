@@ -1,49 +1,91 @@
-import { UserRole } from './auth';
-
 export interface User {
   id: string;
   username: string;
   email: string;
   firstName: string;
   lastName: string;
-  role: UserRole;
-  status: UserStatus;
+  tenantId: string;
+  isActive: boolean;
   createdAt: string;
-  updatedAt: string;
+  createdBy: string;
+  lastModifiedAt: string;
+  lastModifiedBy: string;
+  roles: string[];
+  claims?: UserClaim[];
 }
 
-export enum UserStatus {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  PENDING = 'PENDING',
-  SUSPENDED = 'SUSPENDED'
+export interface UserClaim {
+  claimType: string;
+  claimValue: string;
 }
 
 export interface UserFilters {
-  role?: UserRole;
-  status?: UserStatus;
+  role?: string;
+  isActive?: boolean;
   search?: string;
 }
 
 export interface CreateUserRequest {
+  userName: string;
   email: string;
   password: string;
+  confirmPassword: string;
   firstName: string;
   lastName: string;
-  role: UserRole;
+  tenantId: string;
+  isActive: boolean;
+  roles: string[];
 }
 
 export interface UpdateUserRequest {
+  email?: string;
   firstName?: string;
   lastName?: string;
-  email?: string;
-  role?: UserRole;
-  status?: UserStatus;
+  isActive?: boolean;
+}
+
+export interface UserResponseDto {
+  succeeded: boolean;
+  userId: string;
+  message: string;
 }
 
 export interface UserListResponse {
-  users: User[];
-  total: number;
-  page: number;
-  limit: number;
+  succeeded: boolean;
+  message: string;
+  data: User[];
+}
+
+export interface UserResponse {
+  succeeded: boolean;
+  message: string;
+  data: User;
+}
+
+export interface ChangePasswordRequest {
+  userId: string;
+  currentPassword: string;
+  newPassword: string;
+  confirmNewPassword: string;
+}
+
+export interface ResetPasswordRequest {
+  userId: string;
+  newPassword: string;
+  confirmNewPassword: string;
+}
+
+export interface UserRolesRequest {
+  userId: string;
+  roles: string[];
+}
+
+export interface UserClaimsRequest {
+  userId: string;
+  claims: UserClaim[];
+}
+
+export interface RoleClaimRequest {
+  claimType: string;
+  claimValue: string;
 }
