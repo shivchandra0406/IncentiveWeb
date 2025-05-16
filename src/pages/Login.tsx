@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -32,14 +32,17 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, isAuthenticated, isLoading, error: authError } = useAuthStore();
 
   useEffect(() => {
     // Check if user is already logged in
     if (isAuthenticated) {
-      navigate('/dashboard');
+      // Redirect to the page they were trying to access, or dashboard if none
+      const from = (location.state as any)?.from?.pathname || '/dashboard';
+      navigate(from, { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, location]);
 
   useEffect(() => {
     // Set error from auth store

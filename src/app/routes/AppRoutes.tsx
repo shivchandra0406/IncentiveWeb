@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { CircularProgress, Box } from '@mui/material';
 import MainLayout from '../../layouts/MainLayout';
 import Login from '../../pages/Login';
+import ProtectedRoute from '../../components/Auth/ProtectedRoute';
 
 // Lazy loaded components
 const Dashboard = lazy(() => import('../../pages/Dashboard'));
@@ -39,13 +40,17 @@ const AppRoutes: React.FC = () => {
         <Route path="/login" element={<Login />} />
 
         {/* Protected routes */}
-        <Route path="/" element={<MainLayout />}>
+        <Route path="/" element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="users" element={<Users />} />
           <Route path="roles" element={<Roles />} />
           <Route path="leads" element={<Leads />} />
-          <Route path="incentive-plans" element={<IncentivePlans />} />
+          <Route path="incentive-plans/*" element={<IncentivePlans />} />
           <Route path="deals" element={<Deals />} />
           <Route path="payouts" element={<Payouts />} />
           <Route path="workflows" element={<Workflows />} />
