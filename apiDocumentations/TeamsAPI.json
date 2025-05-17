@@ -1,0 +1,425 @@
+{
+  "apiName": "Teams API",
+  "version": "1.0.0",
+  "baseUrl": "/api/teams",
+  "description": "API for managing teams and team members in the system",
+  "authentication": {
+    "type": "JWT",
+    "headerName": "Authorization",
+    "format": "Bearer {token}"
+  },
+  "multiTenancy": {
+    "headerName": "X-TenantId",
+    "description": "All requests must include a tenant ID in the header"
+  },
+  "responseFormat": {
+    "structure": {
+      "succeeded": "boolean - Indicates if the request was successful",
+      "message": "string - Success or error message",
+      "data": "object - Response data",
+      "errors": "array - Array of errors if any"
+    },
+    "example": {
+      "succeeded": true,
+      "message": "Success message",
+      "data": {},
+      "errors": null
+    }
+  },
+  "endpoints": [
+    {
+      "name": "Get All Teams",
+      "path": "/",
+      "method": "GET",
+      "description": "Retrieves a list of all teams",
+      "parameters": [],
+      "response": {
+        "type": "array",
+        "description": "List of teams",
+        "example": {
+          "succeeded": true,
+          "message": "Teams retrieved successfully",
+          "data": [
+            {
+              "id": "5fa85f64-5717-4562-b3fc-2c963f66afa8",
+              "name": "North Region Sales",
+              "description": "Sales team for the North region",
+              "isActive": true,
+              "tenantId": "tenant-001",
+              "createdAt": "2023-03-01T09:00:00Z",
+              "createdBy": "user-001",
+              "lastModifiedAt": "2023-03-01T09:00:00Z",
+              "lastModifiedBy": "user-001",
+              "members": [
+                {
+                  "id": "6fa85f64-5717-4562-b3fc-2c963f66afa9",
+                  "teamId": "5fa85f64-5717-4562-b3fc-2c963f66afa8",
+                  "teamName": "North Region Sales",
+                  "userId": "7fa85f64-5717-4562-b3fc-2c963f66afaa",
+                  "userName": "john.doe@example.com",
+                  "role": "Team Lead",
+                  "isActive": true,
+                  "joinedDate": "2023-03-01T09:00:00Z",
+                  "leftDate": null
+                }
+              ]
+            }
+          ],
+          "errors": null
+        }
+      }
+    },
+    {
+      "name": "Get Team by ID",
+      "path": "/{id}",
+      "method": "GET",
+      "description": "Retrieves a specific team by its ID",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "format": "uuid",
+          "description": "The ID of the team"
+        }
+      ],
+      "response": {
+        "type": "object",
+        "description": "Detailed information about the specific team",
+        "example": {
+          "succeeded": true,
+          "message": "Team retrieved successfully",
+          "data": {
+            "id": "5fa85f64-5717-4562-b3fc-2c963f66afa8",
+            "name": "North Region Sales",
+            "description": "Sales team for the North region",
+            "isActive": true,
+            "tenantId": "tenant-001",
+            "createdAt": "2023-03-01T09:00:00Z",
+            "createdBy": "user-001",
+            "lastModifiedAt": "2023-03-01T09:00:00Z",
+            "lastModifiedBy": "user-001",
+            "members": [
+              {
+                "id": "6fa85f64-5717-4562-b3fc-2c963f66afa9",
+                "teamId": "5fa85f64-5717-4562-b3fc-2c963f66afa8",
+                "teamName": "North Region Sales",
+                "userId": "7fa85f64-5717-4562-b3fc-2c963f66afaa",
+                "userName": "john.doe@example.com",
+                "role": "Team Lead",
+                "isActive": true,
+                "joinedDate": "2023-03-01T09:00:00Z",
+                "leftDate": null
+              }
+            ]
+          },
+          "errors": null
+        }
+      }
+    },
+    {
+      "name": "Create Team",
+      "path": "/",
+      "method": "POST",
+      "description": "Creates a new team",
+      "requestBody": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the team",
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the team",
+            "maxLength": 500
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether the team is active",
+            "default": true
+          }
+        }
+      },
+      "response": {
+        "type": "object",
+        "description": "Created team",
+        "example": {
+          "succeeded": true,
+          "message": "Team created successfully",
+          "data": {
+            "id": "8fa85f64-5717-4562-b3fc-2c963f66afab",
+            "name": "South Region Sales",
+            "description": "Sales team for the South region",
+            "isActive": true,
+            "tenantId": "tenant-001",
+            "createdAt": "2023-05-20T11:30:00Z",
+            "createdBy": "user-001",
+            "lastModifiedAt": "2023-05-20T11:30:00Z",
+            "lastModifiedBy": "user-001",
+            "members": []
+          },
+          "errors": null
+        }
+      }
+    },
+    {
+      "name": "Update Team",
+      "path": "/{id}",
+      "method": "PUT",
+      "description": "Updates an existing team",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "format": "uuid",
+          "description": "The ID of the team to update"
+        }
+      ],
+      "requestBody": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the team",
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the team",
+            "maxLength": 500
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether the team is active"
+          }
+        }
+      },
+      "response": {
+        "type": "object",
+        "description": "Updated team",
+        "example": {
+          "succeeded": true,
+          "message": "Team updated successfully",
+          "data": {
+            "id": "8fa85f64-5717-4562-b3fc-2c963f66afab",
+            "name": "South Region Sales (Updated)",
+            "description": "Sales team for the South region - Updated description",
+            "isActive": true,
+            "tenantId": "tenant-001",
+            "createdAt": "2023-05-20T11:30:00Z",
+            "createdBy": "user-001",
+            "lastModifiedAt": "2023-05-20T12:15:00Z",
+            "lastModifiedBy": "user-001",
+            "members": []
+          },
+          "errors": null
+        }
+      }
+    },
+    {
+      "name": "Delete Team",
+      "path": "/{id}",
+      "method": "DELETE",
+      "description": "Deletes a team by its ID",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "format": "uuid",
+          "description": "The ID of the team to delete"
+        }
+      ],
+      "response": {
+        "type": "boolean",
+        "description": "Success or failure indication",
+        "example": {
+          "succeeded": true,
+          "message": "Team deleted successfully",
+          "data": true,
+          "errors": null
+        }
+      }
+    },
+    {
+      "name": "Get Team Members",
+      "path": "/{teamId}/members",
+      "method": "GET",
+      "description": "Retrieves all members of a specific team",
+      "parameters": [
+        {
+          "name": "teamId",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "format": "uuid",
+          "description": "The ID of the team"
+        }
+      ],
+      "response": {
+        "type": "array",
+        "description": "List of team members",
+        "example": {
+          "succeeded": true,
+          "message": "Team members retrieved successfully",
+          "data": [
+            {
+              "id": "6fa85f64-5717-4562-b3fc-2c963f66afa9",
+              "teamId": "5fa85f64-5717-4562-b3fc-2c963f66afa8",
+              "teamName": "North Region Sales",
+              "userId": "7fa85f64-5717-4562-b3fc-2c963f66afaa",
+              "userName": "john.doe@example.com",
+              "role": "Team Lead",
+              "isActive": true,
+              "joinedDate": "2023-03-01T09:00:00Z",
+              "leftDate": null
+            }
+          ],
+          "errors": null
+        }
+      }
+    },
+    {
+      "name": "Add Team Member",
+      "path": "/members",
+      "method": "POST",
+      "description": "Adds a new member to a team",
+      "requestBody": {
+        "type": "object",
+        "required": ["teamId", "userId", "role"],
+        "properties": {
+          "teamId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the team"
+          },
+          "userId": {
+            "type": "string",
+            "description": "ID of the user",
+            "maxLength": 450
+          },
+          "role": {
+            "type": "string",
+            "description": "Role of the user in the team",
+            "maxLength": 100
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether the team member is active",
+            "default": true
+          }
+        }
+      },
+      "response": {
+        "type": "object",
+        "description": "Added team member",
+        "example": {
+          "succeeded": true,
+          "message": "Team member added successfully",
+          "data": {
+            "id": "9fa85f64-5717-4562-b3fc-2c963f66afac",
+            "teamId": "5fa85f64-5717-4562-b3fc-2c963f66afa8",
+            "teamName": "North Region Sales",
+            "userId": "afa85f64-5717-4562-b3fc-2c963f66afad",
+            "userName": "jane.smith@example.com",
+            "role": "Sales Representative",
+            "isActive": true,
+            "joinedDate": "2023-05-21T10:00:00Z",
+            "leftDate": null
+          },
+          "errors": null
+        }
+      }
+    },
+    {
+      "name": "Update Team Member",
+      "path": "/members/{id}",
+      "method": "PUT",
+      "description": "Updates an existing team member",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "format": "uuid",
+          "description": "The ID of the team member to update"
+        }
+      ],
+      "requestBody": {
+        "type": "object",
+        "required": ["role"],
+        "properties": {
+          "role": {
+            "type": "string",
+            "description": "Role of the user in the team",
+            "maxLength": 100
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether the team member is active"
+          },
+          "leftDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Date when the member left the team"
+          }
+        }
+      },
+      "response": {
+        "type": "object",
+        "description": "Updated team member",
+        "example": {
+          "succeeded": true,
+          "message": "Team member updated successfully",
+          "data": {
+            "id": "9fa85f64-5717-4562-b3fc-2c963f66afac",
+            "teamId": "5fa85f64-5717-4562-b3fc-2c963f66afa8",
+            "teamName": "North Region Sales",
+            "userId": "afa85f64-5717-4562-b3fc-2c963f66afad",
+            "userName": "jane.smith@example.com",
+            "role": "Senior Sales Representative",
+            "isActive": true,
+            "joinedDate": "2023-05-21T10:00:00Z",
+            "leftDate": null
+          },
+          "errors": null
+        }
+      }
+    },
+    {
+      "name": "Remove Team Member",
+      "path": "/members/{id}",
+      "method": "DELETE",
+      "description": "Removes a member from a team",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "format": "uuid",
+          "description": "The ID of the team member to remove"
+        }
+      ],
+      "response": {
+        "type": "boolean",
+        "description": "Success or failure indication",
+        "example": {
+          "succeeded": true,
+          "message": "Team member removed successfully",
+          "data": true,
+          "errors": null
+        }
+      }
+    }
+  ]
+}

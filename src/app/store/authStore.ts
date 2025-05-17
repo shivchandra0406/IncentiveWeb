@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import * as AuthModels from '../../core/models/auth';
-import authService from '../../infrastructure/auth/AuthServiceImpl';
+import authService from '../../infrastructure/auth/EnhancedAuthServiceImpl';
 
 // Type aliases for better readability
 type AuthState = AuthModels.AuthState;

@@ -1,0 +1,768 @@
+{
+  "apiName": "Incentive Plans API",
+  "version": "1.0.0",
+  "baseUrl": "/api/incentive-plans",
+  "description": "API for managing different types of incentive plans in the system",
+  "authentication": {
+    "type": "JWT",
+    "headerName": "Authorization",
+    "format": "Bearer {token}"
+  },
+  "multiTenancy": {
+    "headerName": "X-TenantId",
+    "description": "All requests must include a tenant ID in the header"
+  },
+  "responseFormat": {
+    "structure": {
+      "succeeded": "boolean - Indicates if the request was successful",
+      "message": "string - Success or error message",
+      "data": "object - Response data",
+      "errors": "array - Array of errors if any"
+    },
+    "example": {
+      "succeeded": true,
+      "message": "Success message",
+      "data": {},
+      "errors": null
+    }
+  },
+  "planTypes": [
+    "TargetBased",
+    "RoleBased",
+    "ProjectBased",
+    "KickerBased",
+    "TieredBased"
+  ],
+  "commonEndpoints": [
+    {
+      "name": "Get All Incentive Plans",
+      "path": "/",
+      "method": "GET",
+      "description": "Retrieves a list of all incentive plans across all types",
+      "parameters": [],
+      "response": {
+        "type": "array",
+        "description": "List of incentive plan base information",
+        "example": {
+          "succeeded": true,
+          "message": "Incentive plans retrieved successfully",
+          "data": [
+            {
+              "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "planName": "Q2 Sales Target",
+              "planType": "TargetBased",
+              "periodType": "Quarterly",
+              "startDate": "2023-04-01T00:00:00Z",
+              "endDate": "2023-06-30T00:00:00Z",
+              "isActive": true,
+              "tenantId": "tenant-001",
+              "createdAt": "2023-03-15T10:30:00Z",
+              "createdBy": "user-001",
+              "lastModifiedAt": "2023-03-15T10:30:00Z",
+              "lastModifiedBy": "user-001"
+            },
+            {
+              "id": "4fa85f64-5717-4562-b3fc-2c963f66afa7",
+              "planName": "Sales Manager Incentive",
+              "planType": "RoleBased",
+              "periodType": "Monthly",
+              "startDate": null,
+              "endDate": null,
+              "isActive": true,
+              "tenantId": "tenant-001",
+              "createdAt": "2023-03-10T09:15:00Z",
+              "createdBy": "user-001",
+              "lastModifiedAt": "2023-03-10T09:15:00Z",
+              "lastModifiedBy": "user-001"
+            }
+          ],
+          "errors": null
+        }
+      }
+    },
+    {
+      "name": "Get Incentive Plan by ID",
+      "path": "/{id}",
+      "method": "GET",
+      "description": "Retrieves a specific incentive plan by its ID",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "format": "uuid",
+          "description": "The ID of the incentive plan"
+        }
+      ],
+      "response": {
+        "type": "object",
+        "description": "Detailed information about the specific incentive plan",
+        "example": {
+          "succeeded": true,
+          "message": "Incentive plan retrieved successfully",
+          "data": {
+            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "planName": "Q2 Sales Target",
+            "planType": "TargetBased",
+            "periodType": "Quarterly",
+            "startDate": "2023-04-01T00:00:00Z",
+            "endDate": "2023-06-30T00:00:00Z",
+            "isActive": true,
+            "tenantId": "tenant-001",
+            "createdAt": "2023-03-15T10:30:00Z",
+            "createdBy": "user-001",
+            "lastModifiedAt": "2023-03-15T10:30:00Z",
+            "lastModifiedBy": "user-001",
+            "targetType": "MetricBased",
+            "salary": null,
+            "metricType": "BookingValue",
+            "targetValue": 100000.00,
+            "calculationType": "PercentageOnTarget",
+            "incentiveValue": 5.00,
+            "isCumulative": false,
+            "incentiveAfterExceedingTarget": true,
+            "includeSalaryInTarget": false,
+            "provideAdditionalIncentiveOnExceeding": true
+          },
+          "errors": null
+        }
+      }
+    },
+    {
+      "name": "Get Incentive Plans by Type",
+      "path": "/types/{planType}",
+      "method": "GET",
+      "description": "Retrieves all incentive plans of a specific type",
+      "parameters": [
+        {
+          "name": "planType",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "enum": ["TargetBased", "RoleBased", "ProjectBased", "KickerBased", "TieredBased"],
+          "description": "The type of incentive plan"
+        }
+      ],
+      "response": {
+        "type": "array",
+        "description": "List of incentive plans of the specified type"
+      }
+    },
+    {
+      "name": "Delete Incentive Plan",
+      "path": "/{id}",
+      "method": "DELETE",
+      "description": "Deletes an incentive plan by its ID",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "format": "uuid",
+          "description": "The ID of the incentive plan to delete"
+        }
+      ],
+      "response": {
+        "type": "boolean",
+        "description": "Success or failure indication",
+        "example": {
+          "succeeded": true,
+          "message": "Incentive plan deleted successfully",
+          "data": true,
+          "errors": null
+        }
+      }
+    }
+  ],
+  "typeSpecificEndpoints": {
+    "targetBased": [
+      {
+        "name": "Create Target-Based Plan",
+        "path": "/target-based",
+        "method": "POST",
+        "description": "Creates a new target-based incentive plan",
+        "requestBody": {
+          "type": "object",
+          "required": ["planName", "planType", "periodType", "targetType", "metricType", "targetValue", "calculationType", "incentiveValue"],
+          "properties": {
+            "planName": {
+              "type": "string",
+              "description": "Name of the incentive plan",
+              "maxLength": 200
+            },
+            "planType": {
+              "type": "string",
+              "enum": ["TargetBased"],
+              "description": "Type of the incentive plan"
+            },
+            "periodType": {
+              "type": "string",
+              "enum": ["Monthly", "Quarterly", "HalfYearly", "Yearly", "Custom"],
+              "description": "Period for which the plan is applicable"
+            },
+            "startDate": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Start date of the plan (required if periodType is Custom)"
+            },
+            "endDate": {
+              "type": "string",
+              "format": "date-time",
+              "description": "End date of the plan (required if periodType is Custom)"
+            },
+            "isActive": {
+              "type": "boolean",
+              "description": "Whether the plan is active",
+              "default": true
+            },
+            "targetType": {
+              "type": "string",
+              "enum": ["SalaryBased", "MetricBased"],
+              "description": "Type of target for the plan"
+            },
+            "salary": {
+              "type": "number",
+              "format": "decimal",
+              "description": "Salary amount (required if targetType is SalaryBased)",
+              "minimum": 0.01
+            },
+            "metricType": {
+              "type": "string",
+              "enum": ["BookingValue", "UnitsSold", "Revenue"],
+              "description": "Type of metric used for measuring performance"
+            },
+            "targetValue": {
+              "type": "number",
+              "format": "decimal",
+              "description": "Target value to achieve",
+              "minimum": 0.01
+            },
+            "calculationType": {
+              "type": "string",
+              "enum": ["FixedAmount", "PercentageOnTarget"],
+              "description": "How incentives are calculated"
+            },
+            "incentiveValue": {
+              "type": "number",
+              "format": "decimal",
+              "description": "Value of the incentive (percentage or fixed amount)",
+              "minimum": 0.01
+            },
+            "isCumulative": {
+              "type": "boolean",
+              "description": "Whether incentives are cumulative",
+              "default": false
+            },
+            "incentiveAfterExceedingTarget": {
+              "type": "boolean",
+              "description": "Whether incentives are given after exceeding target",
+              "default": true
+            },
+            "includeSalaryInTarget": {
+              "type": "boolean",
+              "description": "Whether salary is included in target calculation",
+              "default": false
+            },
+            "provideAdditionalIncentiveOnExceeding": {
+              "type": "boolean",
+              "description": "Whether to provide additional incentive on exceeding target",
+              "default": false
+            }
+          }
+        },
+        "response": {
+          "type": "object",
+          "description": "Created target-based incentive plan"
+        }
+      },
+      {
+        "name": "Update Target-Based Plan",
+        "path": "/target-based/{id}",
+        "method": "PUT",
+        "description": "Updates an existing target-based incentive plan",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uuid",
+            "description": "The ID of the target-based plan to update"
+          }
+        ],
+        "requestBody": {
+          "type": "object",
+          "required": ["planName", "periodType", "targetType", "metricType", "targetValue", "calculationType", "incentiveValue"],
+          "properties": {
+            "planName": {
+              "type": "string",
+              "description": "Name of the incentive plan",
+              "maxLength": 200
+            },
+            "periodType": {
+              "type": "string",
+              "enum": ["Monthly", "Quarterly", "HalfYearly", "Yearly", "Custom"],
+              "description": "Period for which the plan is applicable"
+            },
+            "startDate": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Start date of the plan (required if periodType is Custom)"
+            },
+            "endDate": {
+              "type": "string",
+              "format": "date-time",
+              "description": "End date of the plan (required if periodType is Custom)"
+            },
+            "isActive": {
+              "type": "boolean",
+              "description": "Whether the plan is active"
+            },
+            "targetType": {
+              "type": "string",
+              "enum": ["SalaryBased", "MetricBased"],
+              "description": "Type of target for the plan"
+            },
+            "salary": {
+              "type": "number",
+              "format": "decimal",
+              "description": "Salary amount (required if targetType is SalaryBased)",
+              "minimum": 0.01
+            },
+            "metricType": {
+              "type": "string",
+              "enum": ["BookingValue", "UnitsSold", "Revenue"],
+              "description": "Type of metric used for measuring performance"
+            },
+            "targetValue": {
+              "type": "number",
+              "format": "decimal",
+              "description": "Target value to achieve",
+              "minimum": 0.01
+            },
+            "calculationType": {
+              "type": "string",
+              "enum": ["FixedAmount", "PercentageOnTarget"],
+              "description": "How incentives are calculated"
+            },
+            "incentiveValue": {
+              "type": "number",
+              "format": "decimal",
+              "description": "Value of the incentive (percentage or fixed amount)",
+              "minimum": 0.01
+            },
+            "isCumulative": {
+              "type": "boolean",
+              "description": "Whether incentives are cumulative"
+            },
+            "incentiveAfterExceedingTarget": {
+              "type": "boolean",
+              "description": "Whether incentives are given after exceeding target"
+            },
+            "includeSalaryInTarget": {
+              "type": "boolean",
+              "description": "Whether salary is included in target calculation"
+            },
+            "provideAdditionalIncentiveOnExceeding": {
+              "type": "boolean",
+              "description": "Whether to provide additional incentive on exceeding target"
+            }
+          }
+        },
+        "response": {
+          "type": "object",
+          "description": "Updated target-based incentive plan"
+        }
+      }
+    ],
+    "roleBased": [
+      {
+        "name": "Create Role-Based Plan",
+        "path": "/role-based",
+        "method": "POST",
+        "description": "Creates a new role-based incentive plan",
+        "requestBody": {
+          "type": "object",
+          "required": ["planName", "planType", "periodType", "role", "targetType", "metricType", "targetValue", "calculationType", "incentiveValue"],
+          "properties": {
+            "planName": {
+              "type": "string",
+              "description": "Name of the incentive plan",
+              "maxLength": 200
+            },
+            "planType": {
+              "type": "string",
+              "enum": ["RoleBased"],
+              "description": "Type of the incentive plan"
+            },
+            "periodType": {
+              "type": "string",
+              "enum": ["Monthly", "Quarterly", "HalfYearly", "Yearly", "Custom"],
+              "description": "Period for which the plan is applicable"
+            },
+            "startDate": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Start date of the plan (required if periodType is Custom)"
+            },
+            "endDate": {
+              "type": "string",
+              "format": "date-time",
+              "description": "End date of the plan (required if periodType is Custom)"
+            },
+            "isActive": {
+              "type": "boolean",
+              "description": "Whether the plan is active",
+              "default": true
+            },
+            "role": {
+              "type": "string",
+              "description": "Role for which the plan is applicable",
+              "maxLength": 100
+            },
+            "isTeamBased": {
+              "type": "boolean",
+              "description": "Whether the plan is team-based",
+              "default": false
+            },
+            "teamId": {
+              "type": "string",
+              "format": "uuid",
+              "description": "ID of the team (required if isTeamBased is true)"
+            },
+            "targetType": {
+              "type": "string",
+              "enum": ["SalaryBased", "MetricBased"],
+              "description": "Type of target for the plan"
+            },
+            "salary": {
+              "type": "number",
+              "format": "decimal",
+              "description": "Salary amount (required if targetType is SalaryBased)",
+              "minimum": 0.01
+            },
+            "metricType": {
+              "type": "string",
+              "enum": ["BookingValue", "UnitsSold", "Revenue"],
+              "description": "Type of metric used for measuring performance"
+            },
+            "targetValue": {
+              "type": "number",
+              "format": "decimal",
+              "description": "Target value to achieve",
+              "minimum": 0.01
+            },
+            "calculationType": {
+              "type": "string",
+              "enum": ["FixedAmount", "PercentageOnTarget"],
+              "description": "How incentives are calculated"
+            },
+            "incentiveValue": {
+              "type": "number",
+              "format": "decimal",
+              "description": "Value of the incentive (percentage or fixed amount)",
+              "minimum": 0.01
+            },
+            "isCumulative": {
+              "type": "boolean",
+              "description": "Whether incentives are cumulative",
+              "default": false
+            },
+            "incentiveAfterExceedingTarget": {
+              "type": "boolean",
+              "description": "Whether incentives are given after exceeding target",
+              "default": true
+            },
+            "includeSalaryInTarget": {
+              "type": "boolean",
+              "description": "Whether salary is included in target calculation",
+              "default": false
+            },
+            "provideAdditionalIncentiveOnExceeding": {
+              "type": "boolean",
+              "description": "Whether to provide additional incentive on exceeding target",
+              "default": false
+            }
+          }
+        },
+        "response": {
+          "type": "object",
+          "description": "Created role-based incentive plan"
+        }
+      },
+      {
+        "name": "Update Role-Based Plan",
+        "path": "/role-based/{id}",
+        "method": "PUT",
+        "description": "Updates an existing role-based incentive plan",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uuid",
+            "description": "The ID of the role-based plan to update"
+          }
+        ],
+        "requestBody": {
+          "type": "object",
+          "required": ["planName", "periodType", "role", "targetType", "metricType", "targetValue", "calculationType", "incentiveValue"],
+          "properties": {
+            "planName": {
+              "type": "string",
+              "description": "Name of the incentive plan",
+              "maxLength": 200
+            },
+            "periodType": {
+              "type": "string",
+              "enum": ["Monthly", "Quarterly", "HalfYearly", "Yearly", "Custom"],
+              "description": "Period for which the plan is applicable"
+            },
+            "startDate": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Start date of the plan (required if periodType is Custom)"
+            },
+            "endDate": {
+              "type": "string",
+              "format": "date-time",
+              "description": "End date of the plan (required if periodType is Custom)"
+            },
+            "isActive": {
+              "type": "boolean",
+              "description": "Whether the plan is active"
+            },
+            "role": {
+              "type": "string",
+              "description": "Role for which the plan is applicable",
+              "maxLength": 100
+            },
+            "isTeamBased": {
+              "type": "boolean",
+              "description": "Whether the plan is team-based"
+            },
+            "teamId": {
+              "type": "string",
+              "format": "uuid",
+              "description": "ID of the team (required if isTeamBased is true)"
+            },
+            "targetType": {
+              "type": "string",
+              "enum": ["SalaryBased", "MetricBased"],
+              "description": "Type of target for the plan"
+            },
+            "salaryPercentage": {
+              "type": "number",
+              "format": "decimal",
+              "description": "Percentage of salary (required if targetType is SalaryBased)",
+              "minimum": 0.01,
+              "maximum": 100
+            },
+            "metricType": {
+              "type": "string",
+              "enum": ["BookingValue", "UnitsSold", "Revenue"],
+              "description": "Type of metric used for measuring performance"
+            },
+            "targetValue": {
+              "type": "number",
+              "format": "decimal",
+              "description": "Target value to achieve",
+              "minimum": 0.01
+            },
+            "calculationType": {
+              "type": "string",
+              "enum": ["FixedAmount", "PercentageOnTarget"],
+              "description": "How incentives are calculated"
+            },
+            "incentiveValue": {
+              "type": "number",
+              "format": "decimal",
+              "description": "Value of the incentive (percentage or fixed amount)",
+              "minimum": 0.01
+            },
+            "isCumulative": {
+              "type": "boolean",
+              "description": "Whether incentives are cumulative"
+            },
+            "incentiveAfterExceedingTarget": {
+              "type": "boolean",
+              "description": "Whether incentives are given after exceeding target"
+            },
+            "includeSalaryInTarget": {
+              "type": "boolean",
+              "description": "Whether salary is included in target calculation"
+            }
+          }
+        },
+        "response": {
+          "type": "object",
+          "description": "Updated role-based incentive plan"
+        }
+      }
+    ],
+    "projectBased": [
+      {
+        "name": "Create Project-Based Plan",
+        "path": "/project-based",
+        "method": "POST",
+        "description": "Creates a new project-based incentive plan",
+        "requestBody": {
+          "type": "object",
+          "required": ["planName", "planType", "periodType", "projectId", "metricType", "targetValue", "incentiveValue", "calculationType"],
+          "properties": {
+            "planName": {
+              "type": "string",
+              "description": "Name of the incentive plan",
+              "maxLength": 200
+            },
+            "planType": {
+              "type": "string",
+              "enum": ["ProjectBased"],
+              "description": "Type of the incentive plan"
+            },
+            "periodType": {
+              "type": "string",
+              "enum": ["Monthly", "Quarterly", "HalfYearly", "Yearly", "Custom"],
+              "description": "Period for which the plan is applicable"
+            },
+            "startDate": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Start date of the plan (required if periodType is Custom)"
+            },
+            "endDate": {
+              "type": "string",
+              "format": "date-time",
+              "description": "End date of the plan (required if periodType is Custom)"
+            },
+            "isActive": {
+              "type": "boolean",
+              "description": "Whether the plan is active",
+              "default": true
+            },
+            "projectId": {
+              "type": "string",
+              "format": "uuid",
+              "description": "ID of the project"
+            },
+            "metricType": {
+              "type": "string",
+              "enum": ["BookingValue", "UnitsSold", "Revenue"],
+              "description": "Type of metric used for measuring performance"
+            },
+            "targetValue": {
+              "type": "number",
+              "format": "decimal",
+              "description": "Target value to achieve",
+              "minimum": 0.01
+            },
+            "incentiveValue": {
+              "type": "number",
+              "format": "decimal",
+              "description": "Value of the incentive (percentage or fixed amount)",
+              "minimum": 0.01
+            },
+            "calculationType": {
+              "type": "string",
+              "enum": ["FixedAmount", "PercentageOnTarget"],
+              "description": "How incentives are calculated"
+            },
+            "incentiveAfterExceedingTarget": {
+              "type": "boolean",
+              "description": "Whether incentives are given after exceeding target",
+              "default": true
+            }
+          }
+        },
+        "response": {
+          "type": "object",
+          "description": "Created project-based incentive plan"
+        }
+      },
+      {
+        "name": "Update Project-Based Plan",
+        "path": "/project-based/{id}",
+        "method": "PUT",
+        "description": "Updates an existing project-based incentive plan",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uuid",
+            "description": "The ID of the project-based plan to update"
+          }
+        ],
+        "requestBody": {
+          "type": "object",
+          "required": ["planName", "periodType", "projectId", "metricType", "targetValue", "incentiveValue", "calculationType"],
+          "properties": {
+            "planName": {
+              "type": "string",
+              "description": "Name of the incentive plan",
+              "maxLength": 200
+            },
+            "periodType": {
+              "type": "string",
+              "enum": ["Monthly", "Quarterly", "HalfYearly", "Yearly", "Custom"],
+              "description": "Period for which the plan is applicable"
+            },
+            "startDate": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Start date of the plan (required if periodType is Custom)"
+            },
+            "endDate": {
+              "type": "string",
+              "format": "date-time",
+              "description": "End date of the plan (required if periodType is Custom)"
+            },
+            "isActive": {
+              "type": "boolean",
+              "description": "Whether the plan is active"
+            },
+            "projectId": {
+              "type": "string",
+              "format": "uuid",
+              "description": "ID of the project"
+            },
+            "metricType": {
+              "type": "string",
+              "enum": ["BookingValue", "UnitsSold", "Revenue"],
+              "description": "Type of metric used for measuring performance"
+            },
+            "targetValue": {
+              "type": "number",
+              "format": "decimal",
+              "description": "Target value to achieve",
+              "minimum": 0.01
+            },
+            "incentiveValue": {
+              "type": "number",
+              "format": "decimal",
+              "description": "Value of the incentive (percentage or fixed amount)",
+              "minimum": 0.01
+            },
+            "calculationType": {
+              "type": "string",
+              "enum": ["FixedAmount", "PercentageOnTarget"],
+              "description": "How incentives are calculated"
+            },
+            "incentiveAfterExceedingTarget": {
+              "type": "boolean",
+              "description": "Whether incentives are given after exceeding target"
+            }
+          }
+        },
+        "response": {
+          "type": "object",
+          "description": "Updated project-based incentive plan"
+        }
+      }
+    ]
+  }
+}
