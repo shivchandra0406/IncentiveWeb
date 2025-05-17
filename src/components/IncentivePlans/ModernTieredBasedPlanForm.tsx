@@ -11,7 +11,6 @@ import {
   Select,
   MenuItem,
   FormControlLabel,
-  Checkbox,
   Switch,
   Button,
   Stack,
@@ -21,8 +20,7 @@ import {
   Paper,
   alpha,
   FormHelperText,
-  IconButton,
-  Chip
+  IconButton
 } from '@mui/material';
 import {
   Help as HelpIcon,
@@ -32,10 +30,13 @@ import {
 import incentivePlanService from '../../infrastructure/incentivePlans/IncentivePlanServiceImpl';
 import {
   PeriodType,
-  IncentiveCalculationType
+  IncentiveCalculationType,
+  CurrencyType,
+  IncentivePlanType,
+  MetricType
 } from '../../core/models/incentivePlanTypes';
 
-import type { CreateTieredIncentivePlanRequest, TieredIncentivePlan, TieredIncentiveTier } from '../../core/models/incentivePlanTypes';
+import type { TieredIncentivePlan } from '../../core/models/incentivePlanTypes';
 
 // Define a simplified tier interface for the form
 interface TierLevel {
@@ -43,6 +44,7 @@ interface TierLevel {
   fromValue: number;
   toValue: number;
   incentiveValue: number;
+  currencyType: CurrencyType;
 }
 
 interface ModernTieredBasedPlanFormProps {
@@ -60,7 +62,7 @@ const ModernTieredBasedPlanForm: React.FC<ModernTieredBasedPlanFormProps> = ({ i
   const [isActive, setIsActive] = useState(true);
   const [calculationType, setCalculationType] = useState<IncentiveCalculationType>(IncentiveCalculationType.FixedAmount);
   const [tiers, setTiers] = useState<TierLevel[]>([
-    { level: 1, fromValue: 0, toValue: 1000, incentiveValue: 0 }
+    { level: 1, fromValue: 0, toValue: 1000, incentiveValue: 0, currencyType: CurrencyType.Rupees }
   ]);
 
   // UI state
@@ -106,7 +108,17 @@ const ModernTieredBasedPlanForm: React.FC<ModernTieredBasedPlanFormProps> = ({ i
     setPlanName(data.planName || '');
     setPeriodType(data.periodType || PeriodType.Monthly);
     setIsActive(data.isActive !== undefined ? data.isActive : true);
-    setCalculationType(data.calculationType || IncentiveCalculationType.FixedAmount);
+
+    // Handle calculation type - it might be in different locations depending on the API response
+    // Use type assertion to handle potential API response differences
+    const anyData = data as any;
+    if (anyData.calculationType !== undefined) {
+      setCalculationType(anyData.calculationType);
+    } else if (data.tiers && data.tiers.length > 0 && (data.tiers[0] as any).calculationType !== undefined) {
+      setCalculationType((data.tiers[0] as any).calculationType);
+    } else {
+      setCalculationType(IncentiveCalculationType.FixedAmount);
+    }
 
     if (data.tiers && data.tiers.length > 0) {
       // Map the backend tier model to our form tier model
@@ -114,7 +126,8 @@ const ModernTieredBasedPlanForm: React.FC<ModernTieredBasedPlanFormProps> = ({ i
         level: index + 1, // Use index+1 as level
         fromValue: tier.fromValue || 0,
         toValue: tier.toValue || 0,
-        incentiveValue: tier.incentiveValue || 0
+        incentiveValue: tier.incentiveValue || 0,
+        currencyType: tier.currencyType || CurrencyType.Rupees
       })));
     }
   };
@@ -197,7 +210,9 @@ const ModernTieredBasedPlanForm: React.FC<ModernTieredBasedPlanFormProps> = ({ i
       setError(null);
       setSuccess(null);
 
-      const planData: CreateTieredIncentivePlanRequest = {
+      // Create the request payload
+      // We need to cast the tiers to any to avoid TypeScript errors with the backend model
+      const planData: any = {
         planName,
         periodType,
         isActive,
@@ -206,8 +221,14 @@ const ModernTieredBasedPlanForm: React.FC<ModernTieredBasedPlanFormProps> = ({ i
           level: tier.level,
           fromValue: tier.fromValue,
           toValue: tier.toValue,
-          incentiveValue: tier.incentiveValue
-        }))
+          incentiveValue: tier.incentiveValue,
+          currencyType: tier.currencyType,
+          // Add calculationType to each tier as required by the backend
+          calculationType: calculationType
+        })),
+        // Add required fields for the API
+        planType: IncentivePlanType.TieredBased,
+        metricType: MetricType.BookingValue
       };
 
       let response;
@@ -263,7 +284,8 @@ const ModernTieredBasedPlanForm: React.FC<ModernTieredBasedPlanFormProps> = ({ i
         level: newLevel,
         fromValue: newFromValue,
         toValue: newToValue,
-        incentiveValue: 0
+        incentiveValue: 0,
+        currencyType: CurrencyType.Rupees
       }
     ]);
   };
@@ -284,7 +306,7 @@ const ModernTieredBasedPlanForm: React.FC<ModernTieredBasedPlanFormProps> = ({ i
     setTiers(reorderedTiers);
   };
 
-  const handleTierChange = (index: number, field: keyof TierLevel, value: number) => {
+  const handleTierChange = (index: number, field: keyof TierLevel, value: number | CurrencyType) => {
     const updatedTiers = [...tiers];
     updatedTiers[index] = {
       ...updatedTiers[index],
@@ -587,94 +609,195 @@ const ModernTieredBasedPlanForm: React.FC<ModernTieredBasedPlanFormProps> = ({ i
                     </IconButton>
                   </Box>
 
-                  {/* All three fields in a single row */}
-                  <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
-                    {/* From Value */}
-                    <Box sx={{ flex: 1 }}>
-                      <TextField
-                        fullWidth
-                        label="From Value *"
-                        type="number"
-                        value={tier.fromValue}
-                        onChange={(e) => handleTierChange(index, 'fromValue', Number(e.target.value))}
-                        error={!!tierErrors[index]?.fromValue}
-                        helperText={tierErrors[index]?.fromValue || 'Min'}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            '&:hover fieldset': {
-                              borderColor: '#00b8a9',
-                            },
-                            '&.Mui-focused fieldset': {
-                              borderColor: '#00b8a9',
-                            },
-                          }
-                        }}
-                      />
+                  {/* Visual range indicator */}
+                  <Box sx={{ mb: 2, px: 1 }}>
+                    <Typography variant="caption" sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center' }}>
+                      <Box component="span" sx={{
+                        display: 'inline-block',
+                        width: 12,
+                        height: 12,
+                        borderRadius: '50%',
+                        bgcolor: '#00b8a9',
+                        mr: 1
+                      }} />
+                      Range: When value is between {tier.fromValue} and {tier.toValue}
+                    </Typography>
+                  </Box>
+
+                  {/* All fields in rows */}
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {/* First row: From Value and To Value */}
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+                      {/* From Value */}
+                      <Box sx={{ flex: 1 }}>
+                        <TextField
+                          fullWidth
+                          label="From Value *"
+                          type="number"
+                          value={tier.fromValue}
+                          onChange={(e) => handleTierChange(index, 'fromValue', Number(e.target.value))}
+                          error={!!tierErrors[index]?.fromValue}
+                          helperText={tierErrors[index]?.fromValue || 'Min'}
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '&:hover fieldset': {
+                                borderColor: '#00b8a9',
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: '#00b8a9',
+                              },
+                            }
+                          }}
+                        />
+                      </Box>
+
+                      {/* To Value */}
+                      <Box sx={{ flex: 1 }}>
+                        <TextField
+                          fullWidth
+                          label="To Value *"
+                          type="number"
+                          value={tier.toValue}
+                          onChange={(e) => handleTierChange(index, 'toValue', Number(e.target.value))}
+                          error={!!tierErrors[index]?.toValue}
+                          helperText={tierErrors[index]?.toValue || 'Max'}
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              '&:hover fieldset': {
+                                borderColor: '#00b8a9',
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: '#00b8a9',
+                              },
+                            }
+                          }}
+                        />
+                      </Box>
                     </Box>
 
-                    {/* To Value */}
-                    <Box sx={{ flex: 1 }}>
-                      <TextField
-                        fullWidth
-                        label="To Value *"
-                        type="number"
-                        value={tier.toValue}
-                        onChange={(e) => handleTierChange(index, 'toValue', Number(e.target.value))}
-                        error={!!tierErrors[index]?.toValue}
-                        helperText={tierErrors[index]?.toValue || 'Max'}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            '&:hover fieldset': {
-                              borderColor: '#00b8a9',
+                    {/* Second row: Incentive Value and Currency Type */}
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+                      {/* Incentive Value */}
+                      <Box sx={{ flex: 1 }}>
+                        <TextField
+                          fullWidth
+                          label="Incentive Value *"
+                          type="number"
+                          value={tier.incentiveValue}
+                          onChange={(e) => handleTierChange(index, 'incentiveValue', Number(e.target.value))}
+                          error={!!tierErrors[index]?.incentiveValue}
+                          helperText={tierErrors[index]?.incentiveValue || (
+                            calculationType === IncentiveCalculationType.PercentageOnTarget
+                              ? '%'
+                              : 'Amount'
+                          )}
+                          sx={{
+                            '& .MuiInputLabel-root': {
+                              color: calculationType === IncentiveCalculationType.PercentageOnTarget ? '#2e7d32' : '#1976d2'
                             },
-                            '&.Mui-focused fieldset': {
-                              borderColor: '#00b8a9',
-                            },
-                          }
-                        }}
-                      />
-                    </Box>
+                            '& .MuiOutlinedInput-root': {
+                              '&:hover fieldset': {
+                                borderColor: calculationType === IncentiveCalculationType.PercentageOnTarget ? '#2e7d32' : '#1976d2',
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: calculationType === IncentiveCalculationType.PercentageOnTarget ? '#2e7d32' : '#1976d2',
+                              },
+                            }
+                          }}
+                        />
+                      </Box>
 
-                    {/* Incentive Value */}
-                    <Box sx={{ flex: 1 }}>
-                      <TextField
-                        fullWidth
-                        label="Incentive Value *"
-                        type="number"
-                        value={tier.incentiveValue}
-                        onChange={(e) => handleTierChange(index, 'incentiveValue', Number(e.target.value))}
-                        error={!!tierErrors[index]?.incentiveValue}
-                        helperText={tierErrors[index]?.incentiveValue || (
-                          calculationType === IncentiveCalculationType.PercentageOnTarget
-                            ? '%'
-                            : '$'
-                        )}
-                        sx={{
-                          '& .MuiInputLabel-root': {
-                            color: calculationType === IncentiveCalculationType.PercentageOnTarget ? '#2e7d32' : '#1976d2'
-                          },
-                          '& .MuiOutlinedInput-root': {
-                            '&:hover fieldset': {
-                              borderColor: calculationType === IncentiveCalculationType.PercentageOnTarget ? '#2e7d32' : '#1976d2',
-                            },
-                            '&.Mui-focused fieldset': {
-                              borderColor: calculationType === IncentiveCalculationType.PercentageOnTarget ? '#2e7d32' : '#1976d2',
-                            },
-                          }
-                        }}
-                      />
+                      {/* Currency Type - only show if not percentage based */}
+                      {calculationType !== IncentiveCalculationType.PercentageOnTarget && (
+                        <Box sx={{ flex: 1 }}>
+                          <FormControl fullWidth>
+                            <InputLabel>Currency Type *</InputLabel>
+                            <Select
+                              value={tier.currencyType}
+                              label="Currency Type *"
+                              onChange={(e) => handleTierChange(index, 'currencyType', e.target.value as CurrencyType)}
+                              MenuProps={{
+                                PaperProps: {
+                                  sx: {
+                                    width: '250px', // Wider dropdown menu
+                                    maxHeight: '300px' // Taller dropdown for more options
+                                  }
+                                }
+                              }}
+                              sx={{
+                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                  borderColor: '#00b8a9',
+                                },
+                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                  borderColor: '#00b8a9',
+                                },
+                                '& .MuiSelect-select': {
+                                  minWidth: '150px', // Ensure the selected value has enough space
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap'
+                                }
+                              }}
+                            >
+                              <MenuItem value={CurrencyType.Rupees}>Rupees (₹)</MenuItem>
+                              <MenuItem value={CurrencyType.Dollar}>Dollar ($)</MenuItem>
+                            </Select>
+                          </FormControl>
+                        </Box>
+                      )}
                     </Box>
+                  </Box>
+
+                  {/* Result indicator */}
+                  <Box sx={{ mt: 2, px: 1 }}>
+                    <Typography variant="caption" sx={{
+                      color: calculationType === IncentiveCalculationType.PercentageOnTarget ? '#2e7d32' : '#1976d2',
+                      display: 'flex',
+                      alignItems: 'center',
+                      fontWeight: 'medium'
+                    }}>
+                      <Box component="span" sx={{
+                        display: 'inline-block',
+                        width: 12,
+                        height: 12,
+                        borderRadius: '50%',
+                        bgcolor: calculationType === IncentiveCalculationType.PercentageOnTarget ? '#2e7d32' : '#1976d2',
+                        mr: 1
+                      }} />
+                      Result: When in this range, incentive will be {calculationType === IncentiveCalculationType.PercentageOnTarget
+                        ? `${tier.incentiveValue}% of target`
+                        : `${tier.currencyType === CurrencyType.Rupees ? '₹' : '$'}${tier.incentiveValue}`}
+                    </Typography>
                   </Box>
                 </Box>
 
                 {index < tiers.length - 1 && (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'center', my: 2, position: 'relative' }}>
                     <Box sx={{
                       width: '2px',
                       height: '24px',
                       bgcolor: alpha('#00b8a9', 0.5),
                       borderRadius: '4px'
                     }} />
+
+                    {/* Connector label showing that tiers connect */}
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        right: { xs: 'auto', sm: '30%' },
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        bgcolor: alpha('#00b8a9', 0.1),
+                        px: 1,
+                        py: 0.5,
+                        borderRadius: 1,
+                        fontSize: '0.75rem',
+                        color: '#00b8a9',
+                        fontWeight: 'medium'
+                      }}
+                    >
+                      Tier {tier.level} ends at {tier.toValue} where Tier {tier.level + 1} begins
+                    </Box>
                   </Box>
                 )}
               </Box>

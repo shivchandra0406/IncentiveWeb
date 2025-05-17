@@ -32,7 +32,10 @@ import incentivePlanService from '../../infrastructure/incentivePlans/IncentiveP
 import {
   PeriodType,
   TargetType,
-  IncentiveCalculationType
+  IncentiveCalculationType,
+  CurrencyType,
+  IncentivePlanType,
+  MetricType
 } from '../../core/models/incentivePlanTypes';
 
 import type {  CreateRoleBasedIncentivePlanRequest,
@@ -57,6 +60,7 @@ const ModernRoleBasedPlanForm: React.FC<ModernRoleBasedPlanFormProps> = ({ initi
   const [targetType, setTargetType] = useState<TargetType>(TargetType.MetricBased);
   const [calculationType, setCalculationType] = useState<IncentiveCalculationType>(IncentiveCalculationType.FixedAmount);
   const [incentiveValue, setIncentiveValue] = useState<number | ''>('');
+  const [currencyType, setCurrencyType] = useState<CurrencyType>(CurrencyType.Rupees);
   const [isCumulative, setIsCumulative] = useState(false);
   const [incentiveAfterExceedingTarget, setIncentiveAfterExceedingTarget] = useState(false);
   const [includeSalaryInTarget, setIncludeSalaryInTarget] = useState(false);
@@ -126,6 +130,7 @@ const ModernRoleBasedPlanForm: React.FC<ModernRoleBasedPlanFormProps> = ({ initi
     setTargetType(data.targetType || TargetType.MetricBased);
     setCalculationType(data.calculationType || IncentiveCalculationType.FixedAmount);
     setIncentiveValue(data.incentiveValue !== undefined ? data.incentiveValue : '');
+    setCurrencyType(data.currencyType || CurrencyType.Rupees);
     setIsCumulative(data.isCumulative !== undefined ? data.isCumulative : false);
     setIncentiveAfterExceedingTarget(data.incentiveAfterExceedingTarget !== undefined ? data.incentiveAfterExceedingTarget : false);
     setIncludeSalaryInTarget(data.includeSalaryInTarget !== undefined ? data.includeSalaryInTarget : false);
@@ -181,9 +186,14 @@ const ModernRoleBasedPlanForm: React.FC<ModernRoleBasedPlanFormProps> = ({ initi
         targetType,
         calculationType,
         incentiveValue: incentiveValue as number,
+        currencyType,
         isCumulative,
         incentiveAfterExceedingTarget,
-        includeSalaryInTarget
+        includeSalaryInTarget,
+        // Add required fields for the API
+        planType: IncentivePlanType.RoleBased,
+        metricType: MetricType.BookingValue,
+        targetValue: 0
       };
 
       let response;
@@ -459,26 +469,65 @@ const ModernRoleBasedPlanForm: React.FC<ModernRoleBasedPlanFormProps> = ({ initi
             </Typography>
 
             <Stack spacing={3}>
-              <FormControl fullWidth error={!!formErrors.targetType}>
-                <InputLabel>Target Type *</InputLabel>
-                <Select
-                  value={targetType}
-                  label="Target Type *"
-                  onChange={(e) => setTargetType(e.target.value as TargetType)}
-                  sx={{
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#00b8a9',
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#00b8a9',
-                    },
-                  }}
-                >
-                  <MenuItem value={TargetType.MetricBased}>Metric Based</MenuItem>
-                  <MenuItem value={TargetType.SalaryBased}>Salary Based</MenuItem>
-                </Select>
-                {formErrors.targetType && <FormHelperText>{formErrors.targetType}</FormHelperText>}
-              </FormControl>
+              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
+                <Box sx={{ flex: 1 }}>
+                  <FormControl fullWidth error={!!formErrors.targetType}>
+                    <InputLabel>Target Type *</InputLabel>
+                    <Select
+                      value={targetType}
+                      label="Target Type *"
+                      onChange={(e) => setTargetType(e.target.value as TargetType)}
+                      sx={{
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#00b8a9',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#00b8a9',
+                        },
+                      }}
+                    >
+                      <MenuItem value={TargetType.MetricBased}>Metric Based</MenuItem>
+                      <MenuItem value={TargetType.SalaryBased}>Salary Based</MenuItem>
+                    </Select>
+                    {formErrors.targetType && <FormHelperText>{formErrors.targetType}</FormHelperText>}
+                  </FormControl>
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <FormControl fullWidth>
+                    <InputLabel>Currency Type *</InputLabel>
+                    <Select
+                      value={currencyType}
+                      label="Currency Type *"
+                      onChange={(e) => setCurrencyType(e.target.value as CurrencyType)}
+                      MenuProps={{
+                        PaperProps: {
+                          sx: {
+                            width: '250px', // Wider dropdown menu
+                            maxHeight: '300px' // Taller dropdown for more options
+                          }
+                        }
+                      }}
+                      sx={{
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#00b8a9',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#00b8a9',
+                        },
+                        '& .MuiSelect-select': {
+                          minWidth: '150px', // Ensure the selected value has enough space
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }
+                      }}
+                    >
+                      <MenuItem value={CurrencyType.Rupees}>Rupees (₹)</MenuItem>
+                      <MenuItem value={CurrencyType.Dollar}>Dollar ($)</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+              </Box>
 
               <FormControl fullWidth error={!!formErrors.calculationType}>
                 <InputLabel>Calculation Type *</InputLabel>
@@ -514,13 +563,17 @@ const ModernRoleBasedPlanForm: React.FC<ModernRoleBasedPlanFormProps> = ({ initi
                 helperText={formErrors.incentiveValue || (
                   calculationType === IncentiveCalculationType.PercentageOnTarget
                     ? 'Enter percentage value (0-100)'
-                    : 'Enter fixed amount'
+                    : `Enter fixed amount (${currencyType === CurrencyType.Rupees ? '₹' : '$'})`
                 )}
+                // Note: We're using InputProps despite the deprecation warning
+                // because it's the only way to add endAdornment in MUI v5
+                // This will be updated when we migrate to MUI v6
                 InputProps={{
                   endAdornment: calculationType === IncentiveCalculationType.PercentageOnTarget ? '%' : null,
                   inputProps: {
                     min: 0,
-                    max: calculationType === IncentiveCalculationType.PercentageOnTarget ? 100 : undefined
+                    max: calculationType === IncentiveCalculationType.PercentageOnTarget ? 100 : undefined,
+                    step: calculationType === IncentiveCalculationType.PercentageOnTarget ? 0.1 : 1
                   }
                 }}
                 sx={{

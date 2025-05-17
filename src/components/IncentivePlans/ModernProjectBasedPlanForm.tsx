@@ -20,19 +20,22 @@ import {
   Tooltip,
   Paper,
   alpha,
-  FormHelperText,
-  Autocomplete
+  FormHelperText
 } from '@mui/material';
 import {
-  Help as HelpIcon
+  Help as HelpIcon,
+  Add as AddIcon
 } from '@mui/icons-material';
 import incentivePlanService from '../../infrastructure/incentivePlans/IncentivePlanServiceImpl';
 import {
   PeriodType,
-  IncentiveCalculationType
+  IncentiveCalculationType,
+  CurrencyType
 } from '../../core/models/incentivePlanTypes';
 
-import type {CreateProjectBasedIncentivePlanRequest,ProjectBasedIncentivePlan,Project} from '../../core/models/incentivePlanTypes';
+import type {ProjectBasedIncentivePlan,Project} from '../../core/models/incentivePlanTypes';
+import CreateProjectDialog from '../Projects/CreateProjectDialog';
+import projectService from '../../infrastructure/projects/ProjectServiceImpl';
 
 interface ModernProjectBasedPlanFormProps {
   initialData?: ProjectBasedIncentivePlan;
@@ -50,8 +53,8 @@ const ModernProjectBasedPlanForm: React.FC<ModernProjectBasedPlanFormProps> = ({
   const [projectId, setProjectId] = useState('');
   const [calculationType, setCalculationType] = useState<IncentiveCalculationType>(IncentiveCalculationType.FixedAmount);
   const [incentiveValue, setIncentiveValue] = useState<number | ''>('');
+  const [currencyType, setCurrencyType] = useState<CurrencyType>(CurrencyType.Rupees);
   const [isCumulative, setIsCumulative] = useState(false);
-  const [incentiveAfterExceedingTarget, setIncentiveAfterExceedingTarget] = useState(false);
 
   // UI state
   const [loading, setLoading] = useState(false);
@@ -62,16 +65,20 @@ const ModernProjectBasedPlanForm: React.FC<ModernProjectBasedPlanFormProps> = ({
   // Available projects for dropdown
   const [availableProjects, setAvailableProjects] = useState<Project[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
+  const [projectDialogOpen, setProjectDialogOpen] = useState(false);
 
   // Fetch available projects
   useEffect(() => {
     const fetchProjects = async () => {
       try {
         setLoadingProjects(true);
-        const projects = await incentivePlanService.getProjects();
-        setAvailableProjects(projects);
+        console.log('Fetching projects for dropdown...');
+        const projects = await projectService.getProjects();
+        console.log('Projects fetched:', projects);
+        setAvailableProjects(projects || []);
       } catch (err) {
         console.error('Error fetching projects:', err);
+        setError('Failed to load projects. Please try again later.');
       } finally {
         setLoadingProjects(false);
       }
@@ -119,8 +126,8 @@ const ModernProjectBasedPlanForm: React.FC<ModernProjectBasedPlanFormProps> = ({
     setProjectId(data.projectId || '');
     setCalculationType(data.calculationType || IncentiveCalculationType.FixedAmount);
     setIncentiveValue(data.incentiveValue !== undefined ? data.incentiveValue : '');
+    setCurrencyType(data.currencyType || CurrencyType.Rupees);
     setIsCumulative(data.isCumulative !== undefined ? data.isCumulative : false);
-    setIncentiveAfterExceedingTarget(data.incentiveAfterExceedingTarget !== undefined ? data.incentiveAfterExceedingTarget : false);
   };
 
   const validateForm = (): boolean => {
@@ -159,15 +166,19 @@ const ModernProjectBasedPlanForm: React.FC<ModernProjectBasedPlanFormProps> = ({
       setError(null);
       setSuccess(null);
 
-      const planData: CreateProjectBasedIncentivePlanRequest = {
+      const planData: any = {
         planName,
         periodType,
         isActive,
         projectId,
         calculationType,
         incentiveValue: incentiveValue as number,
+        currencyType,
         isCumulative,
-        incentiveAfterExceedingTarget
+        // Add required fields for the API
+        planType: 'ProjectBased',
+        metricType: 'BookingValue',
+        targetValue: 0
       };
 
       let response;
@@ -214,6 +225,11 @@ const ModernProjectBasedPlanForm: React.FC<ModernProjectBasedPlanFormProps> = ({
       <HelpIcon fontSize="small" color="action" sx={{ ml: 1, verticalAlign: 'middle' }} />
     </Tooltip>
   );
+
+  const handleProjectCreated = (newProject: Project) => {
+    setAvailableProjects(prev => [...prev, newProject]);
+    setProjectId(newProject.id);
+  };
 
   return (
     <Box sx={{ width: '100%', p: 2 }}>
@@ -278,6 +294,14 @@ const ModernProjectBasedPlanForm: React.FC<ModernProjectBasedPlanFormProps> = ({
                   value={periodType}
                   label="Period Type *"
                   onChange={(e) => setPeriodType(e.target.value as PeriodType)}
+                  MenuProps={{
+                    PaperProps: {
+                      sx: {
+                        width: '250px', // Wider dropdown menu
+                        maxHeight: '300px' // Taller dropdown for more options
+                      }
+                    }
+                  }}
                   sx={{
                     '&:hover .MuiOutlinedInput-notchedOutline': {
                       borderColor: '#00b8a9',
@@ -285,6 +309,12 @@ const ModernProjectBasedPlanForm: React.FC<ModernProjectBasedPlanFormProps> = ({
                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                       borderColor: '#00b8a9',
                     },
+                    '& .MuiSelect-select': {
+                      minWidth: '150px', // Ensure the selected value has enough space
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }
                   }}
                 >
                   <MenuItem value={PeriodType.Monthly}>Monthly</MenuItem>
@@ -335,10 +365,28 @@ const ModernProjectBasedPlanForm: React.FC<ModernProjectBasedPlanFormProps> = ({
           }}
         >
           <CardContent sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom sx={{ mb: 3, fontWeight: 600, display: 'flex', alignItems: 'center' }}>
-              Project Configuration
-              {renderTooltip('Configure which project this incentive plan applies to')}
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography variant="h6" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center' }}>
+                Project Configuration
+                {renderTooltip('Configure which project this incentive plan applies to')}
+              </Typography>
+
+              <Button
+                variant="outlined"
+                startIcon={<AddIcon />}
+                onClick={() => setProjectDialogOpen(true)}
+                sx={{
+                  borderColor: '#00b8a9',
+                  color: '#00b8a9',
+                  '&:hover': {
+                    borderColor: '#00a99d',
+                    backgroundColor: 'rgba(0, 184, 169, 0.08)',
+                  }
+                }}
+              >
+                Create Project
+              </Button>
+            </Box>
 
             <Stack spacing={3}>
               <FormControl fullWidth error={!!formErrors.projectId}>
@@ -348,6 +396,14 @@ const ModernProjectBasedPlanForm: React.FC<ModernProjectBasedPlanFormProps> = ({
                   label="Project *"
                   onChange={(e) => setProjectId(e.target.value)}
                   disabled={loadingProjects}
+                  MenuProps={{
+                    PaperProps: {
+                      sx: {
+                        width: '350px', // Wider dropdown menu
+                        maxHeight: '400px' // Taller dropdown for more options
+                      }
+                    }
+                  }}
                   sx={{
                     '&:hover .MuiOutlinedInput-notchedOutline': {
                       borderColor: '#00b8a9',
@@ -355,16 +411,38 @@ const ModernProjectBasedPlanForm: React.FC<ModernProjectBasedPlanFormProps> = ({
                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                       borderColor: '#00b8a9',
                     },
+                    '& .MuiSelect-select': {
+                      minWidth: '200px', // Ensure the selected value has enough space
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }
                   }}
                 >
-                  {availableProjects.map((project) => (
-                    <MenuItem key={project.id} value={project.id}>{project.name}</MenuItem>
-                  ))}
+                  {availableProjects.length === 0 && !loadingProjects ? (
+                    <MenuItem disabled>No projects available. Create a new project.</MenuItem>
+                  ) : (
+                    availableProjects.map((project) => (
+                      <MenuItem key={project.id} value={project.id}>{project.name}</MenuItem>
+                    ))
+                  )}
                 </Select>
                 {formErrors.projectId && <FormHelperText>{formErrors.projectId}</FormHelperText>}
                 {loadingProjects && <FormHelperText>Loading projects...</FormHelperText>}
+                {availableProjects.length === 0 && !loadingProjects && (
+                  <FormHelperText>
+                    No projects available. Click the "Create Project" button to add a new project.
+                  </FormHelperText>
+                )}
               </FormControl>
             </Stack>
+
+            {/* Project Creation Dialog */}
+            <CreateProjectDialog
+              open={projectDialogOpen}
+              onClose={() => setProjectDialogOpen(false)}
+              onProjectCreated={handleProjectCreated}
+            />
           </CardContent>
         </Card>
 
@@ -393,6 +471,14 @@ const ModernProjectBasedPlanForm: React.FC<ModernProjectBasedPlanFormProps> = ({
                   value={calculationType}
                   label="Calculation Type *"
                   onChange={(e) => setCalculationType(e.target.value as IncentiveCalculationType)}
+                  MenuProps={{
+                    PaperProps: {
+                      sx: {
+                        width: '300px', // Wider dropdown menu
+                        maxHeight: '300px' // Taller dropdown for more options
+                      }
+                    }
+                  }}
                   sx={{
                     '&:hover .MuiOutlinedInput-notchedOutline': {
                       borderColor: '#00b8a9',
@@ -400,6 +486,12 @@ const ModernProjectBasedPlanForm: React.FC<ModernProjectBasedPlanFormProps> = ({
                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                       borderColor: '#00b8a9',
                     },
+                    '& .MuiSelect-select': {
+                      minWidth: '200px', // Ensure the selected value has enough space
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }
                   }}
                 >
                   <MenuItem value={IncentiveCalculationType.FixedAmount}>Fixed Amount</MenuItem>
@@ -408,44 +500,93 @@ const ModernProjectBasedPlanForm: React.FC<ModernProjectBasedPlanFormProps> = ({
                 {formErrors.calculationType && <FormHelperText>{formErrors.calculationType}</FormHelperText>}
               </FormControl>
 
-              <TextField
-                fullWidth
-                label="Incentive Value *"
-                type="number"
-                value={incentiveValue}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setIncentiveValue(value === '' ? '' : Number(value));
-                }}
-                error={!!formErrors.incentiveValue}
-                helperText={formErrors.incentiveValue || (
-                  calculationType === IncentiveCalculationType.PercentageOnTarget
-                    ? 'Enter percentage value (0-100)'
-                    : 'Enter fixed amount'
-                )}
-                InputProps={{
-                  endAdornment: calculationType === IncentiveCalculationType.PercentageOnTarget ? '%' : null,
-                  inputProps: {
-                    min: 0,
-                    max: calculationType === IncentiveCalculationType.PercentageOnTarget ? 100 : undefined
-                  }
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                  }
-                }}
-              />
+              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
+                <Box sx={{ flex: 1 }}>
+                  <TextField
+                    fullWidth
+                    label="Incentive Value *"
+                    type="number"
+                    value={incentiveValue}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setIncentiveValue(value === '' ? '' : Number(value));
+                    }}
+                    error={!!formErrors.incentiveValue}
+                    helperText={formErrors.incentiveValue || (
+                      calculationType === IncentiveCalculationType.PercentageOnTarget
+                        ? 'Enter percentage value (0-100)'
+                        : 'Enter fixed amount'
+                    )}
+                    // Note: We're using InputProps despite the deprecation warning
+                    // because it's the only way to add endAdornment in MUI v5
+                    // This will be updated when we migrate to MUI v6
+                    InputProps={{
+                      inputProps: {
+                        min: 0,
+                        max: calculationType === IncentiveCalculationType.PercentageOnTarget ? 100 : undefined,
+                        step: calculationType === IncentiveCalculationType.PercentageOnTarget ? 0.1 : 1
+                      },
+                      // Add a suffix for percentage
+                      endAdornment: calculationType === IncentiveCalculationType.PercentageOnTarget ? '%' : null
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        '&:hover fieldset': {
+                          borderColor: '#00b8a9',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#00b8a9',
+                        },
+                      },
+                      '& input': {
+                        minWidth: '100px'
+                      }
+                    }}
+                  />
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <FormControl fullWidth>
+                    <InputLabel>Currency Type *</InputLabel>
+                    <Select
+                      value={currencyType}
+                      label="Currency Type *"
+                      onChange={(e) => setCurrencyType(e.target.value as CurrencyType)}
+                      MenuProps={{
+                        PaperProps: {
+                          sx: {
+                            width: '250px', // Wider dropdown menu
+                            maxHeight: '300px' // Taller dropdown for more options
+                          }
+                        }
+                      }}
+                      sx={{
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#00b8a9',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#00b8a9',
+                        },
+                        '& .MuiSelect-select': {
+                          minWidth: '150px', // Ensure the selected value has enough space
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }
+                      }}
+                    >
+                      <MenuItem value={CurrencyType.Rupees}>Rupees (₹)</MenuItem>
+                      <MenuItem value={CurrencyType.Dollar}>Dollar ($)</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+              </Box>
 
               <Box sx={{ mt: 2 }}>
                 <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
                   Options
                 </Typography>
+
+
 
                 <FormControlLabel
                   control={
@@ -462,38 +603,8 @@ const ModernProjectBasedPlanForm: React.FC<ModernProjectBasedPlanFormProps> = ({
                   }
                   label={
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      Cumulative
-                      {renderTooltip('When enabled, incentives are calculated cumulatively across periods')}
-                    </Box>
-                  }
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    mb: 1,
-                    '& .MuiFormControlLabel-label': {
-                      display: 'flex',
-                      alignItems: 'center'
-                    }
-                  }}
-                />
-
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={incentiveAfterExceedingTarget}
-                      onChange={(e) => setIncentiveAfterExceedingTarget(e.target.checked)}
-                      sx={{
-                        color: '#00b8a9',
-                        '&.Mui-checked': {
-                          color: '#00b8a9',
-                        },
-                      }}
-                    />
-                  }
-                  label={
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      Incentive After Exceeding Target
-                      {renderTooltip('When enabled, incentives continue to be earned after exceeding the target')}
+                      Is Cumulative
+                      {renderTooltip('When enabled, incentives are calculated cumulatively over the period')}
                     </Box>
                   }
                   sx={{

@@ -3,11 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Typography, Alert, CircularProgress } from '@mui/material';
 import incentivePlanService from '../../infrastructure/incentivePlans/IncentivePlanServiceImpl';
 import { IncentivePlanType } from '../../core/models/incentivePlanTypes';
-import TargetBasedPlanForm from './TargetBasedPlanForm';
-import RoleBasedPlanForm from './RoleBasedPlanForm';
-import ProjectBasedPlanForm from './ProjectBasedPlanForm';
-import KickerBasedPlanForm from './KickerBasedPlanForm';
-import TieredBasedPlanForm from './TieredBasedPlanForm';
+import ModernTargetBasedPlanForm from './ModernTargetBasedPlanForm';
+import ModernRoleBasedPlanForm from './ModernRoleBasedPlanForm';
+import ModernProjectBasedPlanForm from './ModernProjectBasedPlanForm';
+import ModernKickerBasedPlanForm from './ModernKickerBasedPlanForm';
+import ModernTieredBasedPlanForm from './ModernTieredBasedPlanForm';
 import { getIncentivePlanTypeLabel } from '../../utils/enumLabels';
 
 interface DynamicIncentivePlanFormProps {
@@ -119,15 +119,15 @@ const DynamicIncentivePlanForm: React.FC<DynamicIncentivePlanFormProps> = ({ mod
 
     switch (planType) {
       case IncentivePlanType.TargetBased:
-        return <TargetBasedPlanForm {...formProps} />;
+        return <ModernTargetBasedPlanForm {...formProps} />;
       case IncentivePlanType.RoleBased:
-        return <RoleBasedPlanForm {...formProps} />;
+        return <ModernRoleBasedPlanForm {...formProps} />;
       case IncentivePlanType.ProjectBased:
-        return <ProjectBasedPlanForm {...formProps} />;
+        return <ModernProjectBasedPlanForm {...formProps} />;
       case IncentivePlanType.KickerBased:
-        return <KickerBasedPlanForm {...formProps} />;
+        return <ModernKickerBasedPlanForm {...formProps} />;
       case IncentivePlanType.TieredBased:
-        return <TieredBasedPlanForm {...formProps} />;
+        return <ModernTieredBasedPlanForm {...formProps} />;
       default:
         return (
           <Alert severity="error">

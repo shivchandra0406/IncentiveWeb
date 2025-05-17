@@ -4,7 +4,8 @@ import {
   MetricType,
   TargetType,
   IncentiveCalculationType,
-  AwardType
+  AwardType,
+  CurrencyType
 } from '../core/models/incentivePlanTypes';
 import { IncentivePlanStatus, RewardType } from '../core/models/incentivePlan';
 import { DealStatus } from '../core/models/deal';
@@ -54,6 +55,11 @@ export const numericToIncentiveCalculationType: Record<number, IncentiveCalculat
 export const numericToAwardType: Record<number, AwardType> = {
   0: AwardType.Cash,
   1: AwardType.Gift
+};
+
+export const numericToCurrencyType: Record<number, CurrencyType> = {
+  0: CurrencyType.Rupees,
+  1: CurrencyType.Dollar
 };
 
 export const numericToIncentivePlanStatus: Record<number, IncentivePlanStatus> = {
@@ -159,6 +165,11 @@ export const awardTypeToNumeric: Record<AwardType, number> = {
   [AwardType.Gift]: 1
 };
 
+export const currencyTypeToNumeric: Record<CurrencyType, number> = {
+  [CurrencyType.Rupees]: 0,
+  [CurrencyType.Dollar]: 1
+};
+
 export const incentivePlanStatusToNumeric: Record<IncentivePlanStatus, number> = {
   [IncentivePlanStatus.DRAFT]: 0,
   [IncentivePlanStatus.ACTIVE]: 1,
@@ -243,7 +254,7 @@ export function mapEnumToNumeric<T extends string>(value: T, mapper: Record<T, n
 // Helper functions for specific enum types
 export function getIncentivePlanTypeFromNumeric(value: number | string | IncentivePlanType): IncentivePlanType {
   console.log("getIncentivePlanTypeFromNumeric: ", value);
-  
+
   return mapNumericToEnum(value, numericToIncentivePlanType);
 }
 
@@ -265,6 +276,10 @@ export function getIncentiveCalculationTypeFromNumeric(value: number | string | 
 
 export function getAwardTypeFromNumeric(value: number | string | AwardType): AwardType {
   return mapNumericToEnum(value, numericToAwardType);
+}
+
+export function getCurrencyTypeFromNumeric(value: number | string | CurrencyType): CurrencyType {
+  return mapNumericToEnum(value, numericToCurrencyType);
 }
 
 export function getIncentivePlanStatusFromNumeric(value: number | string | IncentivePlanStatus): IncentivePlanStatus {

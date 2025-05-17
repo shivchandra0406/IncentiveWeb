@@ -4,6 +4,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import IncentivePlansList from '../components/IncentivePlans/IncentivePlansList';
 import PlanTypeSelector from '../components/IncentivePlans/PlanTypeSelector';
 import TargetBasedPlanForm from '../components/IncentivePlans/TargetBasedPlanForm';
+import ModernTargetBasedPlanForm from '../components/IncentivePlans/ModernTargetBasedPlanForm';
 import RoleBasedPlanForm from '../components/IncentivePlans/RoleBasedPlanForm';
 import ModernRoleBasedPlanForm from '../components/IncentivePlans/ModernRoleBasedPlanForm';
 import ProjectBasedPlanForm from '../components/IncentivePlans/ProjectBasedPlanForm';
@@ -28,21 +29,21 @@ const IncentivePlans: React.FC = () => {
         <Route path="create" element={<PlanTypeSelector />} />
 
         {/* Create routes */}
-        <Route path="create/targetbased" element={<TargetBasedPlanForm />} />
+        <Route path="create/targetbased" element={<ModernTargetBasedPlanForm />} />
         <Route path="create/rolebased" element={<ModernRoleBasedPlanForm />} />
         <Route path="create/projectbased" element={<ModernProjectBasedPlanForm />} />
         <Route path="create/kickerbased" element={<ModernKickerBasedPlanForm />} />
         <Route path="create/tieredbased" element={<ModernTieredBasedPlanForm />} />
 
         {/* Alternative routes with enum values */}
-        <Route path="create/targetbasedplan" element={<TargetBasedPlanForm />} />
+        <Route path="create/targetbasedplan" element={<ModernTargetBasedPlanForm />} />
         <Route path="create/rolebasedplan" element={<ModernRoleBasedPlanForm />} />
         <Route path="create/projectbasedplan" element={<ModernProjectBasedPlanForm />} />
         <Route path="create/kickerplan" element={<ModernKickerBasedPlanForm />} />
         <Route path="create/tieredplan" element={<ModernTieredBasedPlanForm />} />
 
         {/* Edit routes */}
-        <Route path="edit/targetbased/:id" element={<TargetBasedPlanForm />} />
+        <Route path="edit/targetbased/:id" element={<ModernTargetBasedPlanForm />} />
         <Route path="edit/rolebased/:id" element={<ModernRoleBasedPlanForm />} />
         <Route path="edit/projectbased/:id" element={<ModernProjectBasedPlanForm />} />
         <Route path="edit/kickerbased/:id" element={<ModernKickerBasedPlanForm />} />

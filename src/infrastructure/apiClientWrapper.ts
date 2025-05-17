@@ -8,6 +8,7 @@ import {
   getTargetTypeFromNumeric,
   getIncentiveCalculationTypeFromNumeric,
   getAwardTypeFromNumeric,
+  getCurrencyTypeFromNumeric,
   getIncentivePlanStatusFromNumeric,
   getRewardTypeFromNumeric,
   getDealStatusFromNumeric,
@@ -25,6 +26,7 @@ import {
   targetTypeToNumeric,
   incentiveCalculationTypeToNumeric,
   awardTypeToNumeric,
+  currencyTypeToNumeric,
   incentivePlanStatusToNumeric,
   rewardTypeToNumeric,
   dealStatusToNumeric,
@@ -66,6 +68,8 @@ function processResponseData(data: any): any {
           result[key] = getIncentiveCalculationTypeFromNumeric(value);
         } else if (key === 'awardType') {
           result[key] = getAwardTypeFromNumeric(value);
+        } else if (key === 'currencyType') {
+          result[key] = getCurrencyTypeFromNumeric(value);
         } else if (key === 'status' && typeof value === 'number') {
           // Determine which status enum to use based on context
           if (key.includes('incentivePlan') || key.includes('plan')) {
@@ -135,6 +139,8 @@ export function processRequestData(data: any): any {
           result[key] = incentiveCalculationTypeToNumeric[value as keyof typeof incentiveCalculationTypeToNumeric] || value;
         } else if (key === 'awardType' && typeof value === 'string') {
           result[key] = awardTypeToNumeric[value as keyof typeof awardTypeToNumeric] || value;
+        } else if (key === 'currencyType' && typeof value === 'string') {
+          result[key] = currencyTypeToNumeric[value as keyof typeof currencyTypeToNumeric] || value;
         } else if (key === 'status' && typeof value === 'string') {
           // Determine which status enum to use based on context
           if (key.includes('incentivePlan') || key.includes('plan')) {

@@ -37,6 +37,11 @@ export enum AwardType {
   Gift = 'Gift'
 }
 
+export enum CurrencyType {
+  Rupees = 'Rupees',
+  Dollar = 'Dollar'
+}
+
 // Base Plan Interface
 export interface IncentivePlanBase {
   id: string;
@@ -60,6 +65,7 @@ export interface TargetBasedIncentivePlan extends IncentivePlanBase {
   targetValue: number;
   calculationType: IncentiveCalculationType;
   incentiveValue: number;
+  currencyType: CurrencyType;
   isCumulative: boolean;
   incentiveAfterExceedingTarget: boolean;
   includeSalaryInTarget: boolean;
@@ -78,6 +84,7 @@ export interface RoleBasedIncentivePlan extends IncentivePlanBase {
   targetValue: number;
   calculationType: IncentiveCalculationType;
   incentiveValue: number;
+  currencyType: CurrencyType;
   isCumulative: boolean;
   incentiveAfterExceedingTarget: boolean;
   includeSalaryInTarget: boolean;
@@ -90,7 +97,9 @@ export interface ProjectBasedIncentivePlan extends IncentivePlanBase {
   targetValue: number;
   incentiveValue: number;
   calculationType: IncentiveCalculationType;
-  incentiveAfterExceedingTarget: boolean;
+  currencyType: CurrencyType;
+  incentiveAfterExceedingTarget?: boolean; // Keeping for backward compatibility
+  isCumulative: boolean;
 }
 
 // Kicker-Based Incentive Plan
@@ -101,6 +110,7 @@ export interface KickerIncentivePlan extends IncentivePlanBase {
   consistencyMonths: number;
   awardType: AwardType;
   awardValue?: number;
+  currencyType: CurrencyType;
   giftDescription?: string;
 }
 
@@ -111,6 +121,7 @@ export interface TieredIncentiveTier {
   toValue: number;
   incentiveValue: number;
   calculationType: IncentiveCalculationType;
+  currencyType: CurrencyType;
 }
 
 export interface TieredIncentivePlan extends IncentivePlanBase {
