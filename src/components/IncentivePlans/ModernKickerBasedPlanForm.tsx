@@ -20,7 +20,8 @@ import {
   Tooltip,
   Paper,
   alpha,
-  FormHelperText
+  FormHelperText,
+  Divider
 } from '@mui/material';
 import {
   Help as HelpIcon
@@ -33,7 +34,8 @@ import {
   AwardType,
   CurrencyType,
   IncentivePlanType,
-  MetricType
+  MetricType,
+  TargetType
 } from '../../core/models/incentivePlanTypes';
 
 import type {  CreateKickerIncentivePlanRequest,
@@ -50,9 +52,15 @@ const ModernKickerBasedPlanForm: React.FC<ModernKickerBasedPlanFormProps> = ({ i
   // Form state
   const [planName, setPlanName] = useState('');
   const [periodType, setPeriodType] = useState<PeriodType>(PeriodType.Monthly);
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const [isActive, setIsActive] = useState(true);
-  const [location, setLocation] = useState('');
+  const [targetType, setTargetType] = useState<TargetType>(TargetType.MetricBased);
+  const [salary, setSalary] = useState<number | ''>('');
+  const [metricType, setMetricType] = useState<MetricType>(MetricType.BookingValue);
   const [targetValue, setTargetValue] = useState<number | ''>('');
+  const [calculationType, setCalculationType] = useState<IncentiveCalculationType>(IncentiveCalculationType.FixedAmount);
+  const [incentiveValue, setIncentiveValue] = useState<number | ''>('');
   const [consistencyMonths, setConsistencyMonths] = useState<number | ''>('');
   const [awardType, setAwardType] = useState<AwardType>(AwardType.Cash);
   const [awardValue, setAwardValue] = useState<number | ''>('');
@@ -101,13 +109,25 @@ const ModernKickerBasedPlanForm: React.FC<ModernKickerBasedPlanFormProps> = ({ i
     setPlanName(data.planName || '');
     setPeriodType(data.periodType || PeriodType.Monthly);
     setIsActive(data.isActive !== undefined ? data.isActive : true);
-    setLocation(data.location || '');
+    setTargetType(data.targetType || TargetType.MetricBased);
+    setSalary(data.salary !== undefined ? data.salary : '');
+    setMetricType(data.metricType || MetricType.BookingValue);
     setTargetValue(data.targetValue !== undefined ? data.targetValue : '');
+    setCalculationType(data.calculationType || IncentiveCalculationType.FixedAmount);
+    setIncentiveValue(data.incentiveValue !== undefined ? data.incentiveValue : '');
     setConsistencyMonths(data.consistencyMonths !== undefined ? data.consistencyMonths : '');
     setAwardType(data.awardType || AwardType.Cash);
     setAwardValue(data.awardValue !== undefined ? data.awardValue : '');
     setCurrencyType(data.currencyType || CurrencyType.Rupees);
     setGiftDescription(data.giftDescription || '');
+
+    if (data.startDate) {
+      setStartDate(new Date(data.startDate));
+    }
+
+    if (data.endDate) {
+      setEndDate(new Date(data.endDate));
+    }
   };
 
   const validateForm = (): boolean => {
@@ -117,14 +137,37 @@ const ModernKickerBasedPlanForm: React.FC<ModernKickerBasedPlanFormProps> = ({ i
       errors.planName = 'Plan name is required';
     }
 
-    if (!location.trim()) {
-      errors.location = 'Location is required';
+    if (periodType === PeriodType.Custom) {
+      if (!startDate) {
+        errors.startDate = 'Start date is required for custom period';
+      }
+
+      if (!endDate) {
+        errors.endDate = 'End date is required for custom period';
+      } else if (startDate && endDate && endDate < startDate) {
+        errors.endDate = 'End date must be after start date';
+      }
+    }
+
+    if (targetType === TargetType.SalaryBased && salary === '') {
+      errors.salary = 'Salary is required for salary-based targets';
     }
 
     if (targetValue === '') {
       errors.targetValue = 'Target value is required';
     } else if (typeof targetValue === 'number' && targetValue <= 0) {
       errors.targetValue = 'Target value must be greater than 0';
+    }
+
+    if (incentiveValue === '') {
+      errors.incentiveValue = 'Incentive value is required';
+    } else if (typeof incentiveValue === 'number' && incentiveValue <= 0) {
+      errors.incentiveValue = 'Incentive value must be greater than 0';
+    }
+
+    if (calculationType === IncentiveCalculationType.PercentageOnTarget &&
+        typeof incentiveValue === 'number' && incentiveValue > 100) {
+      errors.incentiveValue = 'Percentage cannot exceed 100%';
     }
 
     if (consistencyMonths === '') {
@@ -160,17 +203,22 @@ const ModernKickerBasedPlanForm: React.FC<ModernKickerBasedPlanFormProps> = ({ i
       const planData: CreateKickerIncentivePlanRequest = {
         planName,
         periodType,
+        startDate: periodType === PeriodType.Custom && startDate ? startDate.toISOString() : undefined,
+        endDate: periodType === PeriodType.Custom && endDate ? endDate.toISOString() : undefined,
         isActive,
-        location,
+        targetType,
+        salary: targetType === TargetType.SalaryBased && salary !== '' ? Number(salary) : undefined,
+        metricType,
         targetValue: targetValue as number,
+        calculationType,
+        incentiveValue: incentiveValue as number,
         consistencyMonths: consistencyMonths as number,
         awardType,
         awardValue: awardType === AwardType.Cash ? (awardValue as number) : undefined,
         currencyType,
         giftDescription: awardType === AwardType.Gift ? giftDescription : undefined,
         // Add required fields for the API
-        planType: IncentivePlanType.KickerBased,
-        metricType: MetricType.BookingValue
+        planType: IncentivePlanType.KickerBased
       };
 
       let response;
@@ -299,6 +347,58 @@ const ModernKickerBasedPlanForm: React.FC<ModernKickerBasedPlanFormProps> = ({ i
                 {formErrors.periodType && <FormHelperText>{formErrors.periodType}</FormHelperText>}
               </FormControl>
 
+              {periodType === PeriodType.Custom && (
+                <>
+                  <TextField
+                    fullWidth
+                    label="Start Date *"
+                    type="date"
+                    value={startDate ? startDate.toISOString().split('T')[0] : ''}
+                    onChange={(e) => {
+                      const date = e.target.value ? new Date(e.target.value) : null;
+                      setStartDate(date);
+                    }}
+                    error={!!formErrors.startDate}
+                    helperText={formErrors.startDate}
+                    InputLabelProps={{ shrink: true }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        '&:hover fieldset': {
+                          borderColor: '#00b8a9',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#00b8a9',
+                        },
+                      }
+                    }}
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="End Date *"
+                    type="date"
+                    value={endDate ? endDate.toISOString().split('T')[0] : ''}
+                    onChange={(e) => {
+                      const date = e.target.value ? new Date(e.target.value) : null;
+                      setEndDate(date);
+                    }}
+                    error={!!formErrors.endDate}
+                    helperText={formErrors.endDate}
+                    InputLabelProps={{ shrink: true }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        '&:hover fieldset': {
+                          borderColor: '#00b8a9',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#00b8a9',
+                        },
+                      }
+                    }}
+                  />
+                </>
+              )}
+
               <FormControlLabel
                 control={
                   <Switch
@@ -344,24 +444,110 @@ const ModernKickerBasedPlanForm: React.FC<ModernKickerBasedPlanFormProps> = ({ i
             </Typography>
 
             <Stack spacing={3}>
-              <TextField
-                fullWidth
-                label="Location *"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                error={!!formErrors.location}
-                helperText={formErrors.location || 'Enter the location for this kicker incentive'}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
+              <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
+                <Box sx={{ flex: 1 }}>
+                  <FormControl fullWidth error={!!formErrors.targetType}>
+                    <InputLabel>Target Type *</InputLabel>
+                    <Select
+                      value={targetType}
+                      label="Target Type *"
+                      onChange={(e) => setTargetType(e.target.value as TargetType)}
+                      sx={{
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#00b8a9',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#00b8a9',
+                        },
+                      }}
+                    >
+                      <MenuItem value={TargetType.MetricBased}>Metric Based</MenuItem>
+                      <MenuItem value={TargetType.SalaryBased}>Salary Based</MenuItem>
+                    </Select>
+                    {formErrors.targetType && <FormHelperText>{formErrors.targetType}</FormHelperText>}
+                  </FormControl>
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <FormControl fullWidth>
+                    <InputLabel>Currency Type *</InputLabel>
+                    <Select
+                      value={currencyType}
+                      label="Currency Type *"
+                      onChange={(e) => setCurrencyType(e.target.value as CurrencyType)}
+                      MenuProps={{
+                        PaperProps: {
+                          sx: {
+                            width: '250px', // Wider dropdown menu
+                            maxHeight: '300px' // Taller dropdown for more options
+                          }
+                        }
+                      }}
+                      sx={{
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#00b8a9',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#00b8a9',
+                        },
+                        '& .MuiSelect-select': {
+                          minWidth: '150px', // Ensure the selected value has enough space
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }
+                      }}
+                    >
+                      <MenuItem value={CurrencyType.Rupees}>Rupees (₹)</MenuItem>
+                      <MenuItem value={CurrencyType.Dollar}>Dollar ($)</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+              </Box>
+
+              {targetType === TargetType.SalaryBased && (
+                <TextField
+                  fullWidth
+                  label="Salary *"
+                  type="number"
+                  value={salary}
+                  onChange={(e) => setSalary(e.target.value === '' ? '' : Number(e.target.value))}
+                  error={!!formErrors.salary}
+                  helperText={formErrors.salary}
+                  inputProps={{ min: 0 }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': {
+                        borderColor: '#00b8a9',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#00b8a9',
+                      },
+                    }
+                  }}
+                />
+              )}
+
+              <FormControl fullWidth error={!!formErrors.metricType}>
+                <InputLabel>Metric Type *</InputLabel>
+                <Select
+                  value={metricType}
+                  label="Metric Type *"
+                  onChange={(e) => setMetricType(e.target.value as MetricType)}
+                  sx={{
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
                       borderColor: '#00b8a9',
                     },
-                    '&.Mui-focused fieldset': {
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                       borderColor: '#00b8a9',
                     },
-                  }
-                }}
-              />
+                  }}
+                >
+                  <MenuItem value={MetricType.BookingValue}>Booking Value</MenuItem>
+                  <MenuItem value={MetricType.UnitsSold}>Units Sold</MenuItem>
+                  <MenuItem value={MetricType.Revenue}>Revenue</MenuItem>
+                </Select>
+                {formErrors.metricType && <FormHelperText>{formErrors.metricType}</FormHelperText>}
+              </FormControl>
 
               <TextField
                 fullWidth
@@ -374,9 +560,6 @@ const ModernKickerBasedPlanForm: React.FC<ModernKickerBasedPlanFormProps> = ({ i
                 }}
                 error={!!formErrors.targetValue}
                 helperText={formErrors.targetValue || 'Enter the target value that triggers the kicker'}
-                // Note: We're using InputProps despite the deprecation warning
-                // because it's the only way to add endAdornment in MUI v5
-                // This will be updated when we migrate to MUI v6
                 InputProps={{
                   inputProps: { min: 0 }
                 }}
@@ -392,6 +575,98 @@ const ModernKickerBasedPlanForm: React.FC<ModernKickerBasedPlanFormProps> = ({ i
                 }}
               />
 
+              <FormControl fullWidth error={!!formErrors.calculationType}>
+                <InputLabel>Calculation Type *</InputLabel>
+                <Select
+                  value={calculationType}
+                  label="Calculation Type *"
+                  onChange={(e) => setCalculationType(e.target.value as IncentiveCalculationType)}
+                  sx={{
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#00b8a9',
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#00b8a9',
+                    },
+                  }}
+                >
+                  <MenuItem value={IncentiveCalculationType.FixedAmount}>Fixed Amount</MenuItem>
+                  <MenuItem value={IncentiveCalculationType.PercentageOnTarget}>Percentage on Target</MenuItem>
+                </Select>
+                {formErrors.calculationType && <FormHelperText>{formErrors.calculationType}</FormHelperText>}
+              </FormControl>
+
+              {calculationType === IncentiveCalculationType.FixedAmount ? (
+                <TextField
+                  fullWidth
+                  label="Incentive Amount *"
+                  type="number"
+                  value={incentiveValue}
+                  onChange={(e) => setIncentiveValue(e.target.value === '' ? '' : Number(e.target.value))}
+                  error={!!formErrors.incentiveValue}
+                  helperText={formErrors.incentiveValue || `Enter fixed amount (${currencyType === CurrencyType.Rupees ? '₹' : '$'})`}
+                  InputProps={{
+                    inputProps: { min: 0 }
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': {
+                        borderColor: '#00b8a9',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#00b8a9',
+                      },
+                    }
+                  }}
+                />
+              ) : (
+                <TextField
+                  fullWidth
+                  label="Incentive Percentage *"
+                  type="number"
+                  value={incentiveValue}
+                  onChange={(e) => setIncentiveValue(e.target.value === '' ? '' : Number(e.target.value))}
+                  error={!!formErrors.incentiveValue}
+                  helperText={formErrors.incentiveValue || 'Enter percentage value (0-100)'}
+                  InputProps={{
+                    endAdornment: '%',
+                    inputProps: { min: 0, max: 100, step: 0.1 }
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': {
+                        borderColor: '#00b8a9',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#00b8a9',
+                      },
+                    }
+                  }}
+                />
+              )}
+            </Stack>
+          </CardContent>
+        </Card>
+
+        {/* Kicker Reward Configuration Card */}
+        <Card
+          elevation={0}
+          sx={{
+            p: 0,
+            mb: 3,
+            bgcolor: 'background.default',
+            borderRadius: 2,
+            border: '1px solid',
+            borderColor: alpha('#000', 0.1)
+          }}
+        >
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom sx={{ mb: 3, fontWeight: 600, display: 'flex', alignItems: 'center' }}>
+              Kicker Reward Configuration
+              {renderTooltip('Configure the kicker reward details based on consistency')}
+            </Typography>
+
+            <Stack spacing={3}>
               <TextField
                 fullWidth
                 label="Consistency Months *"
@@ -403,9 +678,6 @@ const ModernKickerBasedPlanForm: React.FC<ModernKickerBasedPlanFormProps> = ({ i
                 }}
                 error={!!formErrors.consistencyMonths}
                 helperText={formErrors.consistencyMonths || 'Enter the number of months the target must be consistently met'}
-                // Note: We're using InputProps despite the deprecation warning
-                // because it's the only way to add endAdornment in MUI v5
-                // This will be updated when we migrate to MUI v6
                 InputProps={{
                   inputProps: { min: 1, step: 1 }
                 }}
@@ -420,29 +692,7 @@ const ModernKickerBasedPlanForm: React.FC<ModernKickerBasedPlanFormProps> = ({ i
                   }
                 }}
               />
-            </Stack>
-          </CardContent>
-        </Card>
 
-        {/* Award Configuration Card */}
-        <Card
-          elevation={0}
-          sx={{
-            p: 0,
-            mb: 3,
-            bgcolor: 'background.default',
-            borderRadius: 2,
-            border: '1px solid',
-            borderColor: alpha('#000', 0.1)
-          }}
-        >
-          <CardContent sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom sx={{ mb: 3, fontWeight: 600, display: 'flex', alignItems: 'center' }}>
-              Award Configuration
-              {renderTooltip('Configure the award details for this kicker plan')}
-            </Typography>
-
-            <Stack spacing={3}>
               <FormControl fullWidth error={!!formErrors.awardType}>
                 <InputLabel>Award Type *</InputLabel>
                 <Select
@@ -510,41 +760,6 @@ const ModernKickerBasedPlanForm: React.FC<ModernKickerBasedPlanFormProps> = ({ i
                       }}
                     />
                   </Box>
-                  <Box sx={{ flex: 1 }}>
-                    <FormControl fullWidth>
-                      <InputLabel>Currency Type *</InputLabel>
-                      <Select
-                        value={currencyType}
-                        label="Currency Type *"
-                        onChange={(e) => setCurrencyType(e.target.value as CurrencyType)}
-                        MenuProps={{
-                          PaperProps: {
-                            sx: {
-                              width: '250px', // Wider dropdown menu
-                              maxHeight: '300px' // Taller dropdown for more options
-                            }
-                          }
-                        }}
-                        sx={{
-                          '&:hover .MuiOutlinedInput-notchedOutline': {
-                            borderColor: '#00b8a9',
-                          },
-                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                            borderColor: '#00b8a9',
-                          },
-                          '& .MuiSelect-select': {
-                            minWidth: '150px', // Ensure the selected value has enough space
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                          }
-                        }}
-                      >
-                        <MenuItem value={CurrencyType.Rupees}>Rupees (₹)</MenuItem>
-                        <MenuItem value={CurrencyType.Dollar}>Dollar ($)</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Box>
                 </Box>
               )}
 
@@ -574,18 +789,33 @@ const ModernKickerBasedPlanForm: React.FC<ModernKickerBasedPlanFormProps> = ({ i
           </CardContent>
         </Card>
 
-        {/* Action Buttons */}
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+        {/* Sticky Footer with Action Buttons */}
+        <Box
+          sx={{
+            mt: 3,
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: 2,
+            position: 'sticky',
+            bottom: 16,
+            bgcolor: 'background.paper',
+            py: 2,
+            borderTop: '1px solid',
+            borderColor: 'divider',
+            zIndex: 1
+          }}
+        >
           <Button
             variant="outlined"
             onClick={() => navigate('/incentive-plans')}
+            disabled={loading}
             sx={{
-              mr: 2,
+              px: 3,
               borderColor: '#00b8a9',
               color: '#00b8a9',
               '&:hover': {
-                borderColor: '#00a99d',
-                backgroundColor: 'rgba(0, 184, 169, 0.08)',
+                borderColor: '#00a99a',
+                backgroundColor: 'rgba(0, 184, 169, 0.04)',
               }
             }}
           >
@@ -593,23 +823,26 @@ const ModernKickerBasedPlanForm: React.FC<ModernKickerBasedPlanFormProps> = ({ i
           </Button>
           <Button
             variant="contained"
+            color="primary"
             onClick={handleSubmit}
             disabled={loading}
+            startIcon={loading ? <CircularProgress size={20} /> : null}
             sx={{
+              px: 3,
               bgcolor: '#00b8a9',
               '&:hover': {
-                bgcolor: '#00a99d',
+                bgcolor: '#00a99a',
+                boxShadow: '0 2px 4px rgba(0,184,169,0.3)',
+                transform: 'translateY(-1px)'
               },
-              '&.Mui-disabled': {
-                bgcolor: 'rgba(0, 184, 169, 0.5)',
-              }
+              '&:active': {
+                bgcolor: '#00877c',
+                transform: 'translateY(0)'
+              },
+              transition: 'all 0.2s ease-in-out'
             }}
           >
-            {loading ? (
-              <CircularProgress size={24} color="inherit" />
-            ) : (
-              isEditMode ? 'Update Plan' : 'Create Plan'
-            )}
+            {isEditMode ? 'Update' : 'Create'} Plan
           </Button>
         </Box>
       </Paper>

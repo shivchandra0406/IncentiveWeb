@@ -88,6 +88,8 @@ export interface RoleBasedIncentivePlan extends IncentivePlanBase {
   isCumulative: boolean;
   incentiveAfterExceedingTarget: boolean;
   includeSalaryInTarget: boolean;
+  provideAdditionalIncentiveOnExceeding?: boolean;
+  additionalIncentivePercentage?: number;
 }
 
 // Project-Based Incentive Plan
@@ -104,9 +106,12 @@ export interface ProjectBasedIncentivePlan extends IncentivePlanBase {
 
 // Kicker-Based Incentive Plan
 export interface KickerIncentivePlan extends IncentivePlanBase {
-  location: string;
+  targetType: TargetType;
+  salary?: number;
   metricType: MetricType;
   targetValue: number;
+  calculationType: IncentiveCalculationType;
+  incentiveValue: number;
   consistencyMonths: number;
   awardType: AwardType;
   awardValue?: number;

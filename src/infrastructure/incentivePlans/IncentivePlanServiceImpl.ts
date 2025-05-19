@@ -97,32 +97,21 @@ class IncentivePlanServiceImpl implements EnhancedIncentivePlanService {
 
   async getProjectBasedPlanById(id: string): Promise<IncentivePlanResponse<ProjectBasedIncentivePlan>> {
     try {
-      // Try the API endpoint with /api prefix first
-      console.log(`Calling API: GET /api/incentive-plans/${id}`);
-      const response = await enhancedApiClient.get<IncentivePlanResponse<ProjectBasedIncentivePlan>>(`/api/incentive-plans/${id}`);
+      // Use the common endpoint for fetching plan details
+      console.log(`Calling API: GET /incentive-plans/${id}`);
+      const response = await enhancedApiClient.get<IncentivePlanResponse<ProjectBasedIncentivePlan>>(`/incentive-plans/${id}`);
       console.log('API response:', response.data);
       return response.data;
     } catch (error: any) {
-      console.error('Error fetching project-based plan from /api endpoint:', error);
+      console.error('Error fetching project-based plan:', error);
       console.error('Error response:', error.response?.data);
 
-      // If the first endpoint fails, try the alternative endpoint
-      try {
-        console.log(`Retrying with alternative endpoint: GET /incentive-plans/${id}`);
-        const response = await enhancedApiClient.get<IncentivePlanResponse<ProjectBasedIncentivePlan>>(`/incentive-plans/${id}`);
-        console.log('API response from alternative endpoint:', response.data);
-        return response.data;
-      } catch (retryError: any) {
-        console.error('Error fetching project-based plan from alternative endpoint:', retryError);
-        console.error('Error response from alternative endpoint:', retryError.response?.data);
-
-        // Return a failed response
-        return {
-          succeeded: false,
-          message: retryError.response?.data?.message || retryError.message || 'Failed to fetch project-based plan',
-          data: null as any // This is correct for IncentivePlanResponse which has a data property
-        };
-      }
+      // Return a failed response
+      return {
+        succeeded: false,
+        message: error.response?.data?.message || error.message || 'Failed to fetch project-based plan',
+        data: null as any // This is correct for IncentivePlanResponse which has a data property
+      };
     }
   }
 
@@ -180,28 +169,17 @@ class IncentivePlanServiceImpl implements EnhancedIncentivePlanService {
   async createProjectBasedPlan(plan: CreateProjectBasedIncentivePlanRequest): Promise<CreateIncentivePlanResponse> {
     try {
       console.log('Creating project-based plan with data:', plan);
-      const response = await enhancedApiClient.post<CreateIncentivePlanResponse>('/api/incentive-plans/project-based', plan);
+      const response = await enhancedApiClient.post<CreateIncentivePlanResponse>('/incentive-plans/project-based', plan);
       console.log('Create project-based plan response:', response.data);
       return response.data;
     } catch (error: any) {
       console.error('Error creating project-based plan:', error);
       console.error('Error response:', error.response?.data);
-
-      // If the first endpoint fails, try the alternative endpoint
-      try {
-        console.log('Retrying with alternative endpoint: /incentive-plans/project-based');
-        const response = await enhancedApiClient.post<CreateIncentivePlanResponse>('/incentive-plans/project-based', plan);
-        console.log('Create project-based plan response from alternative endpoint:', response.data);
-        return response.data;
-      } catch (retryError: any) {
-        console.error('Error creating project-based plan with alternative endpoint:', retryError);
-        console.error('Error response from alternative endpoint:', retryError.response?.data);
-        return {
-          succeeded: false,
-          message: retryError.response?.data?.message || retryError.message || 'Failed to create project-based plan',
-          planId: ''
-        };
-      }
+      return {
+        succeeded: false,
+        message: error.response?.data?.message || error.message || 'Failed to create project-based plan',
+        planId: ''
+      };
     }
   }
 
@@ -247,28 +225,17 @@ class IncentivePlanServiceImpl implements EnhancedIncentivePlanService {
   async updateProjectBasedPlan(id: string, plan: UpdateProjectBasedIncentivePlanRequest): Promise<CreateIncentivePlanResponse> {
     try {
       console.log(`Updating project-based plan with ID ${id}:`, plan);
-      const response = await enhancedApiClient.put<CreateIncentivePlanResponse>(`/api/incentive-plans/project-based/${id}`, plan);
+      const response = await enhancedApiClient.put<CreateIncentivePlanResponse>(`/incentive-plans/project-based/${id}`, plan);
       console.log('Update project-based plan response:', response.data);
       return response.data;
     } catch (error: any) {
       console.error('Error updating project-based plan:', error);
       console.error('Error response:', error.response?.data);
-
-      // If the first endpoint fails, try the alternative endpoint
-      try {
-        console.log(`Retrying with alternative endpoint: /incentive-plans/project-based/${id}`);
-        const response = await enhancedApiClient.put<CreateIncentivePlanResponse>(`/incentive-plans/project-based/${id}`, plan);
-        console.log('Update project-based plan response from alternative endpoint:', response.data);
-        return response.data;
-      } catch (retryError: any) {
-        console.error('Error updating project-based plan with alternative endpoint:', retryError);
-        console.error('Error response from alternative endpoint:', retryError.response?.data);
-        return {
-          succeeded: false,
-          message: retryError.response?.data?.message || retryError.message || 'Failed to update project-based plan',
-          planId: ''
-        };
-      }
+      return {
+        succeeded: false,
+        message: error.response?.data?.message || error.message || 'Failed to update project-based plan',
+        planId: ''
+      };
     }
   }
 

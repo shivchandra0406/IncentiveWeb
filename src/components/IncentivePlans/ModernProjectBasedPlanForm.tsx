@@ -11,7 +11,6 @@ import {
   Select,
   MenuItem,
   FormControlLabel,
-  Checkbox,
   Switch,
   Button,
   Stack,
@@ -49,12 +48,13 @@ const ModernProjectBasedPlanForm: React.FC<ModernProjectBasedPlanFormProps> = ({
   // Form state
   const [planName, setPlanName] = useState('');
   const [periodType, setPeriodType] = useState<PeriodType>(PeriodType.Monthly);
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const [isActive, setIsActive] = useState(true);
   const [projectId, setProjectId] = useState('');
   const [calculationType, setCalculationType] = useState<IncentiveCalculationType>(IncentiveCalculationType.FixedAmount);
   const [incentiveValue, setIncentiveValue] = useState<number | ''>('');
   const [currencyType, setCurrencyType] = useState<CurrencyType>(CurrencyType.Rupees);
-  const [isCumulative, setIsCumulative] = useState(false);
 
   // UI state
   const [loading, setLoading] = useState(false);
@@ -127,7 +127,14 @@ const ModernProjectBasedPlanForm: React.FC<ModernProjectBasedPlanFormProps> = ({
     setCalculationType(data.calculationType || IncentiveCalculationType.FixedAmount);
     setIncentiveValue(data.incentiveValue !== undefined ? data.incentiveValue : '');
     setCurrencyType(data.currencyType || CurrencyType.Rupees);
-    setIsCumulative(data.isCumulative !== undefined ? data.isCumulative : false);
+
+    if (data.startDate) {
+      setStartDate(new Date(data.startDate));
+    }
+
+    if (data.endDate) {
+      setEndDate(new Date(data.endDate));
+    }
   };
 
   const validateForm = (): boolean => {
@@ -152,6 +159,18 @@ const ModernProjectBasedPlanForm: React.FC<ModernProjectBasedPlanFormProps> = ({
       errors.incentiveValue = 'Percentage cannot exceed 100%';
     }
 
+    if (periodType === PeriodType.Custom) {
+      if (!startDate) {
+        errors.startDate = 'Start date is required for custom period';
+      }
+
+      if (!endDate) {
+        errors.endDate = 'End date is required for custom period';
+      } else if (startDate && endDate && endDate < startDate) {
+        errors.endDate = 'End date must be after start date';
+      }
+    }
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -174,11 +193,13 @@ const ModernProjectBasedPlanForm: React.FC<ModernProjectBasedPlanFormProps> = ({
         calculationType,
         incentiveValue: incentiveValue as number,
         currencyType,
-        isCumulative,
+        startDate: periodType === PeriodType.Custom && startDate ? startDate.toISOString() : undefined,
+        endDate: periodType === PeriodType.Custom && endDate ? endDate.toISOString() : undefined,
         // Add required fields for the API
         planType: 'ProjectBased',
         metricType: 'BookingValue',
-        targetValue: 0
+        targetValue: 0,
+        isCumulative: false // Setting to false as per requirement to remove this option
       };
 
       let response;
@@ -186,7 +207,7 @@ const ModernProjectBasedPlanForm: React.FC<ModernProjectBasedPlanFormProps> = ({
       if (isEditMode && id) {
         console.log('Updating project-based plan with ID:', id);
         console.log('Update payload:', planData);
-        console.log('API endpoint that will be called:', `https://localhost:44307/api/incentive-plans/project-based/${id}`);
+        console.log('API endpoint that will be called:', `https://localhost:44307/incentive-plans/project-based/${id}`);
 
         try {
           // For updating, use the type-specific endpoint
@@ -200,7 +221,7 @@ const ModernProjectBasedPlanForm: React.FC<ModernProjectBasedPlanFormProps> = ({
       } else {
         console.log('Creating new project-based plan');
         console.log('Create payload:', planData);
-        console.log('API endpoint that will be called:', `https://localhost:44307/api/incentive-plans/project-based`);
+        console.log('API endpoint that will be called:', `https://localhost:44307/incentive-plans/project-based`);
         response = await incentivePlanService.createProjectBasedPlan(planData);
       }
 
@@ -325,6 +346,58 @@ const ModernProjectBasedPlanForm: React.FC<ModernProjectBasedPlanFormProps> = ({
                 </Select>
                 {formErrors.periodType && <FormHelperText>{formErrors.periodType}</FormHelperText>}
               </FormControl>
+
+              {periodType === PeriodType.Custom && (
+                <>
+                  <TextField
+                    fullWidth
+                    label="Start Date *"
+                    type="date"
+                    value={startDate ? startDate.toISOString().split('T')[0] : ''}
+                    onChange={(e) => {
+                      const date = e.target.value ? new Date(e.target.value) : null;
+                      setStartDate(date);
+                    }}
+                    error={!!formErrors.startDate}
+                    helperText={formErrors.startDate}
+                    InputLabelProps={{ shrink: true }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        '&:hover fieldset': {
+                          borderColor: '#00b8a9',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#00b8a9',
+                        },
+                      }
+                    }}
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="End Date *"
+                    type="date"
+                    value={endDate ? endDate.toISOString().split('T')[0] : ''}
+                    onChange={(e) => {
+                      const date = e.target.value ? new Date(e.target.value) : null;
+                      setEndDate(date);
+                    }}
+                    error={!!formErrors.endDate}
+                    helperText={formErrors.endDate}
+                    InputLabelProps={{ shrink: true }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        '&:hover fieldset': {
+                          borderColor: '#00b8a9',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#00b8a9',
+                        },
+                      }
+                    }}
+                  />
+                </>
+              )}
 
               <FormControlLabel
                 control={
@@ -581,43 +654,7 @@ const ModernProjectBasedPlanForm: React.FC<ModernProjectBasedPlanFormProps> = ({
                 </Box>
               </Box>
 
-              <Box sx={{ mt: 2 }}>
-                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
-                  Options
-                </Typography>
-
-
-
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={isCumulative}
-                      onChange={(e) => setIsCumulative(e.target.checked)}
-                      sx={{
-                        color: '#00b8a9',
-                        '&.Mui-checked': {
-                          color: '#00b8a9',
-                        },
-                      }}
-                    />
-                  }
-                  label={
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      Is Cumulative
-                      {renderTooltip('When enabled, incentives are calculated cumulatively over the period')}
-                    </Box>
-                  }
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    mb: 1,
-                    '& .MuiFormControlLabel-label': {
-                      display: 'flex',
-                      alignItems: 'center'
-                    }
-                  }}
-                />
-              </Box>
+              {/* Options section removed as per requirements */}
             </Stack>
           </CardContent>
         </Card>
