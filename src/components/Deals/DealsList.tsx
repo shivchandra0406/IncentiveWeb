@@ -126,17 +126,17 @@ const DealsList: React.FC = () => {
       setError(null);
       const response = await dealService.getDeals(currentFilters);
       console.log('Raw API response:', response);
-      
+
       if (response.succeeded) {
         // Log the full response structure for debugging
         console.log('Deals data structure:', response.data);
-        
+
         // The API response has a nested structure where deals are in response.data.data
         // Use type assertion to handle the nested structure
         const responseData = response?.data as any;
         const dealsData = responseData || [];
         console.log('Extracted deals data:', dealsData);
-        
+
         // Log the first deal for debugging
         if (dealsData.length > 0) {
           console.log('First deal in response:', dealsData[0]);
@@ -280,7 +280,7 @@ const DealsList: React.FC = () => {
   console.log('Deals array before filtering:', deals);
   console.log('Deals array length:', deals.length);
   console.log('Current filters:', filters);
-  
+
   // Filter deals based on search query and status
   const filteredDeals = deals.filter(deal => {
     // Ensure deal is valid
@@ -288,44 +288,44 @@ const DealsList: React.FC = () => {
       console.log('Found invalid deal in array');
       return false;
     }
-    
+
     // Filter by search query
-    const matchesSearch = searchQuery === '' || 
+    const matchesSearch = searchQuery === '' ||
       (deal.dealName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
        deal.customerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
        (deal.customerEmail && deal.customerEmail.toLowerCase().includes(searchQuery.toLowerCase())));
-    
+
     // Filter by status based on tab selection
     const matchesStatus = filters.status === undefined || deal.status === filters.status;
-    
+
     // Debug logging
     console.log('Filtering deal:', deal.id, 'Status:', deal.status, 'Filter status:', filters.status, 'Matches status:', matchesStatus, 'Matches search:', matchesSearch);
-    
+
     return matchesSearch && matchesStatus;
   });
-  
+
   // Debug logging for filtered deals
   console.log('Filtered deals array:', filteredDeals);
   console.log('Filtered deals length:', filteredDeals.length);
 
   const getStatusLabel = (statusValue: any): string => {
     console.log('getStatusLabel called with:', statusValue, 'type:', typeof statusValue);
-    
+
     // Handle undefined or null
     if (statusValue === undefined || statusValue === null) {
       console.log('Status is undefined or null, defaulting to "Unknown"');
       return 'Unknown';
     }
-    
+
     // If it's already a string, return it
     if (typeof statusValue === 'string' && isNaN(Number(statusValue))) {
       return statusValue;
     }
-    
+
     // Convert to number if it's not already
     const numericStatus = typeof statusValue === 'number' ? statusValue : Number(statusValue);
     console.log('Converted to numeric status:', numericStatus);
-    
+
     // Map numeric values to status labels
     switch (numericStatus) {
       case 0: return 'New';
@@ -335,7 +335,7 @@ const DealsList: React.FC = () => {
       case 4: return 'Lost';
       case 5: return 'PartiallyPaid';
       case 6: return 'FullyPaid';
-      default: 
+      default:
         console.log('Unknown status value:', statusValue);
         return `Unknown (${statusValue})`;
     }
@@ -344,7 +344,7 @@ const DealsList: React.FC = () => {
   const getStatusColor = (status: any) => {
     // Convert to number if it's not already
     const numericStatus = typeof status === 'number' ? status : Number(status);
-    
+
     switch (numericStatus) {
       case 0: // New
         return 'info';
@@ -422,11 +422,11 @@ const DealsList: React.FC = () => {
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, pt: 2 }}>
         <Typography variant="h5" sx={{ mb: 0, fontWeight: 600 }}>
           Deals
         </Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box sx={{ display: 'flex', gap: 1, mt: 2 }}> {/* Added margin-top (mt) to move button down */}
           <Tooltip title="Refresh">
             <IconButton
               onClick={refreshData}

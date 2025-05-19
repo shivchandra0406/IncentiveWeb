@@ -51,7 +51,7 @@ const IncentivePlansList: React.FC = () => {
     fetchIncentivePlans();
   }, [planTypeFilter, statusFilter]);
   console.log("plans: shiv ", plans);
-  
+
   const fetchIncentivePlans = async () => {
     try {
       setLoading(true);
@@ -136,7 +136,7 @@ const IncentivePlansList: React.FC = () => {
 
   const getPlanTypeLabel = (planType: IncentivePlanType): string => {
     console.log("planType: shiv ", planType);
-    
+
     switch (planType) {
       case IncentivePlanType.TargetBased:
         return 'Target Based';
@@ -172,9 +172,9 @@ const IncentivePlansList: React.FC = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, pt: 2 }}>
         <Typography variant="h5">Incentive Plans</Typography>
-        <Box>
+        <Box sx={{ mt: 2 }}> {/* Added margin-top to move button down */}
           <Button
             variant="contained"
             color="primary"
@@ -299,7 +299,7 @@ const IncentivePlansList: React.FC = () => {
             </TableHead>
             <TableBody>
               {plans.length > 0 ? (
-                plans.map((plan) => ( 
+                plans.map((plan) => (
                   console.log("plan: shiv ", plan),
                   <TableRow key={plan.id}>
                     <TableCell>{plan.planName}</TableCell>

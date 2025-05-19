@@ -19,7 +19,6 @@ class DealServiceImpl implements DealService {
       console.log('Fetching deals with filters:', filters);
 
       // Convert any enum string values in filters to numeric values
-      debugger;
       const apiFilters = { ...filters };
       if (filters?.status) {
         apiFilters.status = numericToDealStatus[filters.status];

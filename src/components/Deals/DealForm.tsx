@@ -204,12 +204,12 @@ const DealForm: React.FC = () => {
       // Use the service as before, but we'll handle the status and currency manually
       const response = await dealService.getDealById(dealId);
       console.log('FULL API RESPONSE:', JSON.stringify(response, null, 2));
-      
+
       if (response.succeeded && response.data) {
         // Get the deal data
         const deal = response.data;
         console.log('Deal data from API:', deal);
-        
+
         // Populate form fields with deal data
         setDealName(deal.dealName);
         setCustomerName(deal.customerName);
@@ -219,22 +219,22 @@ const DealForm: React.FC = () => {
         setTotalAmount(deal.totalAmount);
         setPaidAmount(deal.paidAmount || 0);
         setRemainingAmount(deal.remainingAmount || deal.totalAmount);
-        
+
         // Handle currency type mapping
         // API returns 0 for Rupees, 1 for Dollar
         // CurrencyType enum is numeric-based (0, 1)
         logCurrency('Raw currency from API', deal.currencyType);
-        
+
         // Get the raw currency value
         const rawCurrency = deal.currencyType;
-        
+
         // Convert the currency to a number
         let numericCurrency: number;
-        
+
         // Check if it's already a number
         if (typeof rawCurrency === 'number') {
           numericCurrency = rawCurrency;
-        } 
+        }
         // If it's a string that can be parsed as a number
         else if (typeof rawCurrency === 'string' && !isNaN(Number(rawCurrency))) {
           numericCurrency = Number(rawCurrency);
@@ -248,33 +248,33 @@ const DealForm: React.FC = () => {
         else {
           numericCurrency = 0;
         }
-        
+
         logCurrency('Final numeric currency', numericCurrency);
-        
+
         // Set the currency directly as a number
         setCurrencyType(numericCurrency);
-        
+
         setTaxPercentage(deal.taxPercentage || 0);
         setDiscountAmount(deal.discountAmount || 0);
-        
+
         // Handle status mapping
         // API returns numeric values (0, 1, 2, etc.)
         logStatus('Raw value from API', deal.status);
-        
+
         // IMPORTANT FIX: The DealServiceImpl is converting the numeric status from the API to a string enum
         // We need to convert it back to a number for our form
-        
+
         // Get the raw status value
         const rawStatus = deal.status;
         logStatus('Raw status from API', rawStatus);
-        
+
         // Convert the status to a number based on the DealStatus enum
         let numericStatus: number;
-        
+
         // Check if it's already a number
         if (typeof rawStatus === 'number') {
           numericStatus = rawStatus;
-        } 
+        }
         // If it's a string that can be parsed as a number
         else if (typeof rawStatus === 'string' && !isNaN(Number(rawStatus))) {
           numericStatus = Number(rawStatus);
@@ -282,7 +282,7 @@ const DealForm: React.FC = () => {
         // If it's a DealStatus enum value (the service might have converted it)
         else if (typeof rawStatus === 'string') {
           // Find the numeric value that corresponds to this string in the DealStatus enum
-          const statusEntry = Object.entries(DealStatus).find(([key, value]) => 
+          const statusEntry = Object.entries(DealStatus).find(([key, value]) =>
             key === rawStatus || value === rawStatus
           );
           numericStatus = statusEntry ? Number(statusEntry[1]) : 0;
@@ -291,12 +291,12 @@ const DealForm: React.FC = () => {
         else {
           numericStatus = 0;
         }
-        
+
         logStatus('Final numeric status', numericStatus);
-        
+
         // Set the status directly as a number
         setStatus(numericStatus);
-        
+
         // Verify what was set and log helpful debug information
         setTimeout(() => {
           logStatus('After setState', status);
@@ -306,7 +306,7 @@ const DealForm: React.FC = () => {
           console.log('Current dropdown value:', status);
           console.log('Expected dropdown display:', DealStatus[status]);
         }, 0);
-        
+
         setDealDate(deal.dealDate ? new Date(deal.dealDate) : new Date());
         setPaymentDueDate(deal.paymentDueDate ? new Date(deal.paymentDueDate) : null);
         setNotes(deal.notes || '');
@@ -344,7 +344,7 @@ const DealForm: React.FC = () => {
     if (customerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
       errors.customerEmail = 'Invalid email format';
     }
-    
+
     if (typeof totalAmount === 'number' && totalAmount < 0) {
       errors.totalAmount = 'Total amount must be positive';
     }
@@ -356,12 +356,12 @@ const DealForm: React.FC = () => {
     if (typeof discountAmount === 'number' && discountAmount < 0) {
       errors.discountAmount = 'Discount amount must be positive';
     }
-    
+
     // Optional validations for referral fields
     if (referralEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(referralEmail)) {
       errors.referralEmail = 'Invalid referral email format';
     }
-    
+
     if (referralCommission !== '' && typeof referralCommission === 'number' && referralCommission < 0) {
       errors.referralCommission = 'Referral commission must be positive';
     }
@@ -380,7 +380,7 @@ const DealForm: React.FC = () => {
     // Re-enable validation
     const isValid = validateForm();
     console.log('Form validation result:', isValid, 'Form errors:', formErrors);
-    
+
     if (!isValid) {
       console.log('Form validation failed');
       return;
@@ -503,244 +503,227 @@ const DealForm: React.FC = () => {
               <InfoIcon fontSize="small" />
             </IconButton>
           </Box>
-          <Grid container spacing={3} sx={{ width: '100%', m: 0 }}>
-            <Grid item xs={12} md={12} sx={{ p: 1.5 }}>
-              <TextField
-                fullWidth
-                label="Deal Name"
-                value={dealName}
-                onChange={(e) => setDealName(e.target.value)}
-                error={!!formErrors.dealName}
-                helperText={formErrors.dealName}
-                required
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <TextField
+              fullWidth
+              label="Deal Name"
+              value={dealName}
+              onChange={(e) => setDealName(e.target.value)}
+              error={!!formErrors.dealName}
+              helperText={formErrors.dealName}
+              required
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                }
+              }}
+            />
+
+            <FormControl
+              fullWidth
+              sx={{
+                width: '100%',
+                '& .MuiInputBase-root': {
+                  width: '100%',
+                },
+                '& .MuiSelect-select': {
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '16.5px 14px'
+                }
+              }}>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={Number(status)}
+                onChange={(e) => {
+                  const newStatus = Number(e.target.value);
+                  logStatus('Dropdown onChange', newStatus);
+                  setStatus(newStatus);
+                  // Log after state update
+                  setTimeout(() => {
+                    logStatus('After dropdown change', status);
+                  }, 0);
+                }}
+                label="Status"
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
+                  width: '100%',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    '&:hover': {
                       borderColor: '#00b8a9',
                     },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#00b8a9',
-                    },
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#00b8a9',
+                  },
+                }}
+              >
+                {/* Hardcoded status values for clarity */}
+                <MenuItem value={0}>New</MenuItem>
+                <MenuItem value={1}>OnHold</MenuItem>
+                <MenuItem value={2}>Cancelled</MenuItem>
+                <MenuItem value={3}>Won</MenuItem>
+                <MenuItem value={4}>Lost</MenuItem>
+                <MenuItem value={5}>PartiallyPaid</MenuItem>
+                <MenuItem value={6}>FullyPaid</MenuItem>
+              </Select>
+            </FormControl>
+
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DatePicker
+                label="Deal Date"
+                value={dealDate}
+                onChange={(newValue) => setDealDate(newValue)}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    required: true,
+                    error: !!formErrors.dealDate,
+                    helperText: formErrors.dealDate,
+                    sx: {
+                      '& .MuiOutlinedInput-root': {
+                        '&:hover fieldset': {
+                          borderColor: '#00b8a9',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#00b8a9',
+                        },
+                      }
+                    }
                   }
                 }}
               />
-            </Grid>
+            </LocalizationProvider>
 
+            <FormControl
+              fullWidth
+              sx={{
+                width: '100%',
+                '& .MuiInputBase-root': {
+                  width: '100%',
+                },
+                '& .MuiSelect-select': {
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '16.5px 14px'
+                }
+              }}>
+              <InputLabel>Team</InputLabel>
+              <Select
+                value={teamId || ''}
+                onChange={(e) => setTeamId(e.target.value)}
+                label="Team"
+                disabled={loadingTeams}
+                sx={{
+                  width: '100%',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    '&:hover': {
+                      borderColor: '#00b8a9',
+                    },
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#00b8a9',
+                  },
+                }}
+              >
+                <MenuItem value="">None</MenuItem>
+                {teams.map((team) => (
+                  <MenuItem key={team.id} value={team.id}>
+                    {team.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
-            <Grid item xs={12} md={3} sx={{ p: 1.5 }}>
-              <FormControl 
-                fullWidth
+            <FormControl
+              fullWidth
+              sx={{
+                width: '100%',
+                '& .MuiInputBase-root': {
+                  width: '100%',
+                },
+                '& .MuiSelect-select': {
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '16.5px 14px'
+                }
+              }}>
+              <InputLabel>Incentive Rule</InputLabel>
+              <Select
+                value={incentiveRuleId || ''}
+                onChange={(e) => setIncentiveRuleId(e.target.value)}
+                label="Incentive Rule"
+                disabled={loadingIncentiveRules}
                 sx={{
                   width: '100%',
-                  minWidth: '200px',
-                  '& .MuiInputBase-root': {
-                    width: '100%',
-                  },
-                  '& .MuiSelect-select': {
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '16.5px 14px'
-                  }
-                }}>
-                <InputLabel>Status</InputLabel>
-                <Select
-                  value={Number(status)}
-                  onChange={(e) => {
-                    const newStatus = Number(e.target.value);
-                    logStatus('Dropdown onChange', newStatus);
-                    setStatus(newStatus);
-                    // Log after state update
-                    setTimeout(() => {
-                      logStatus('After dropdown change', status);
-                    }, 0);
-                  }}
-                  label="Status"
-                  sx={{
-                    width: '100%',
-                    minWidth: '200px',
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      '&:hover': {
-                        borderColor: '#00b8a9',
-                      },
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    '&:hover': {
                       borderColor: '#00b8a9',
                     },
-                  }}
-                >
-                  {/* Hardcoded status values for clarity */}
-                  <MenuItem value={0}>New</MenuItem>
-                  <MenuItem value={1}>OnHold</MenuItem>
-                  <MenuItem value={2}>Cancelled</MenuItem>
-                  <MenuItem value={3}>Won</MenuItem>
-                  <MenuItem value={4}>Lost</MenuItem>
-                  <MenuItem value={5}>PartiallyPaid</MenuItem>
-                  <MenuItem value={6}>FullyPaid</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={2} sx={{ p: 1.5 }}>
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <DatePicker
-                  label="Deal Date"
-                  value={dealDate}
-                  onChange={(newValue) => setDealDate(newValue)}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      required: true,
-                      error: !!formErrors.dealDate,
-                      helperText: formErrors.dealDate,
-                      sx: {
-                        '& .MuiOutlinedInput-root': {
-                          '&:hover fieldset': {
-                            borderColor: '#00b8a9',
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: '#00b8a9',
-                          },
-                        }
-                      }
-                    }
-                  }}
-                />
-              </LocalizationProvider>
-            </Grid>
-            <Grid item xs={12} md={2} sx={{ p: 1.5 }}>
-              <FormControl 
-                fullWidth
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#00b8a9',
+                  },
+                }}
+              >
+                <MenuItem value="">None</MenuItem>
+                {incentiveRules.map((rule) => (
+                  <MenuItem key={rule.id} value={rule.id}>
+                    {rule.planName}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl
+              fullWidth
+              sx={{
+                width: '100%',
+                '& .MuiInputBase-root': {
+                  width: '100%',
+                },
+                '& .MuiSelect-select': {
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '16.5px 14px'
+                }
+              }}>
+              <InputLabel>Closed User</InputLabel>
+              <Select
+                value={closedByUserId || ''}
+                onChange={(e) => setClosedByUserId(e.target.value)}
+                label="Closed User"
+                disabled={loadingUsers}
                 sx={{
                   width: '100%',
-                  minWidth: '200px',
-                  '& .MuiInputBase-root': {
-                    width: '100%',
-                  },
-                  '& .MuiSelect-select': {
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '16.5px 14px'
-                  }
-                }}>
-                <InputLabel>Team</InputLabel>
-                <Select
-                  value={teamId || ''}
-                  onChange={(e) => setTeamId(e.target.value)}
-                  label="Team"
-                  disabled={loadingTeams}
-                  sx={{
-                    width: '100%',
-                    minWidth: '200px',
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      '&:hover': {
-                        borderColor: '#00b8a9',
-                      },
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    '&:hover': {
                       borderColor: '#00b8a9',
                     },
-                  }}
-                >
-                  <MenuItem value="">None</MenuItem>
-                  {teams.map((team) => (
-                    <MenuItem key={team.id} value={team.id}>
-                      {team.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={2} sx={{ p: 1.5 }}>
-              <FormControl 
-                fullWidth
-                sx={{
-                  width: '100%',
-                  minWidth: '200px',
-                  '& .MuiInputBase-root': {
-                    width: '100%',
                   },
-                  '& .MuiSelect-select': {
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '16.5px 14px'
-                  }
-                }}>
-                <InputLabel>Incentive Rule</InputLabel>
-                <Select
-                  value={incentiveRuleId || ''}
-                  onChange={(e) => setIncentiveRuleId(e.target.value)}
-                  label="Incentive Rule"
-                  disabled={loadingIncentiveRules}
-                  sx={{
-                    width: '100%',
-                    minWidth: '200px',
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      '&:hover': {
-                        borderColor: '#00b8a9',
-                      },
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#00b8a9',
-                    },
-                  }}
-                >
-                  <MenuItem value="">None</MenuItem>
-                  {incentiveRules.map((rule) => (
-                    <MenuItem key={rule.id} value={rule.id}>
-                      {rule.planName}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={2} sx={{ p: 1.5 }}>
-              <FormControl 
-                fullWidth
-                sx={{
-                  width: '100%',
-                  minWidth: '200px',
-                  '& .MuiInputBase-root': {
-                    width: '100%',
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#00b8a9',
                   },
-                  '& .MuiSelect-select': {
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '16.5px 14px'
-                  }
-                }}>
-                <InputLabel>Closed User</InputLabel>
-                <Select
-                  value={closedByUserId || ''}
-                  onChange={(e) => setClosedByUserId(e.target.value)}
-                  label="Closed User"
-                  disabled={loadingUsers}
-                  sx={{
-                    width: '100%',
-                    minWidth: '200px',
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      '&:hover': {
-                        borderColor: '#00b8a9',
-                      },
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#00b8a9',
-                    },
-                  }}
-                >
-                  <MenuItem value="">None</MenuItem>
-                  {users.map((user) => (
-                    <MenuItem key={user.id} value={user.id}>
-                      {user.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
+                }}
+              >
+                <MenuItem value="">None</MenuItem>
+                {users.map((user) => (
+                  <MenuItem key={user.id} value={user.id}>
+                    {user.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             {/* Active status is controlled by the Deal Status dropdown */}
-          </Grid>
+          </Box>
         </CardContent>
       </Card>
 
@@ -755,89 +738,84 @@ const DealForm: React.FC = () => {
               <InfoIcon fontSize="small" />
             </IconButton>
           </Box>
-          <Grid container spacing={3} sx={{ width: '100%', m: 0 }}>
-            <Grid item xs={12} md={6} sx={{ p: 1.5 }}>
-              <TextField
-                fullWidth
-                label="Customer Name"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                error={!!formErrors.customerName}
-                helperText={formErrors.customerName}
-                required
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                  }
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6} sx={{ p: 1.5 }}>
-              <TextField
-                fullWidth
-                label="Customer Email"
-                value={customerEmail}
-                onChange={(e) => setCustomerEmail(e.target.value)}
-                error={!!formErrors.customerEmail}
-                helperText={formErrors.customerEmail}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                  }
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6} sx={{ p: 1.5 }}>
-              <TextField
-                fullWidth
-                label="Customer Phone"
-                value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-                error={!!formErrors.customerPhone}
-                helperText={formErrors.customerPhone}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                  }
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6} sx={{ p: 1.5 }}>
-              <TextField
-                fullWidth
-                label="Customer Address"
-                value={customerAddress}
-                onChange={(e) => setCustomerAddress(e.target.value)}
-                multiline
-                rows={2}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                  }
-                }}
-              />
-            </Grid>
-          </Grid>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <TextField
+              fullWidth
+              label="Customer Name"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              error={!!formErrors.customerName}
+              helperText={formErrors.customerName}
+              required
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                }
+              }}
+            />
+
+            <TextField
+              fullWidth
+              label="Customer Email"
+              value={customerEmail}
+              onChange={(e) => setCustomerEmail(e.target.value)}
+              error={!!formErrors.customerEmail}
+              helperText={formErrors.customerEmail}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                }
+              }}
+            />
+
+            <TextField
+              fullWidth
+              label="Customer Phone"
+              value={customerPhone}
+              onChange={(e) => setCustomerPhone(e.target.value)}
+              error={!!formErrors.customerPhone}
+              helperText={formErrors.customerPhone}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                }
+              }}
+            />
+
+            <TextField
+              fullWidth
+              label="Customer Address"
+              value={customerAddress}
+              onChange={(e) => setCustomerAddress(e.target.value)}
+              multiline
+              rows={3}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                }
+              }}
+            />
+          </Box>
         </CardContent>
       </Card>
 
@@ -852,207 +830,191 @@ const DealForm: React.FC = () => {
               <InfoIcon fontSize="small" />
             </IconButton>
           </Box>
-          <Grid container spacing={3} sx={{ width: '100%', m: 0 }}>
-            <Grid item xs={12} md={4} sx={{ p: 1.5 }}>
-              <TextField
-                fullWidth
-                label="Total Amount"
-                type="number"
-                value={totalAmount}
-                onChange={(e) => {
-                  const value = e.target.value === '' ? '' : Number(e.target.value);
-                  setTotalAmount(value);
-                  if (typeof value === 'number' && typeof paidAmount === 'number') {
-                    setRemainingAmount(calculateRemainingAmount(value, paidAmount));
-                  }
-                }}
-                error={!!formErrors.totalAmount}
-                helperText={formErrors.totalAmount}
-                required
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      {currencyType === CurrencyType.Rupees ? '₹' : '$'}
-                    </InputAdornment>
-                  ),
-                  inputProps: { min: 0.01, step: 0.01 }
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                  }
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={4} sx={{ p: 1.5 }}>
-              <TextField
-                fullWidth
-                label="Paid Amount"
-                type="number"
-                value={paidAmount}
-                onChange={(e) => {
-                  const value = e.target.value === '' ? '' : Number(e.target.value);
-                  setPaidAmount(value);
-                  if (typeof totalAmount === 'number' && typeof value === 'number') {
-                    setRemainingAmount(calculateRemainingAmount(totalAmount, value));
-                  }
-                }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      {currencyType === CurrencyType.Rupees ? '₹' : '$'}
-                    </InputAdornment>
-                  ),
-                  inputProps: { min: 0, step: 0.01 }
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                  }
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={4} sx={{ p: 1.5 }}>
-              <TextField
-                fullWidth
-                label="Remaining Amount"
-                type="number"
-                value={remainingAmount}
-                disabled
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      {currencyType === CurrencyType.Rupees ? '₹' : '$'}
-                    </InputAdornment>
-                  )
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                  }
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={4} sx={{ p: 1.5 }}>
-              <FormControl 
-                fullWidth
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <FormControl
+              fullWidth
+              sx={{
+                width: '100%',
+                '& .MuiInputBase-root': {
+                  width: '100%',
+                },
+                '& .MuiSelect-select': {
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '16.5px 14px'
+                }
+              }} required>
+              <InputLabel>Currency</InputLabel>
+              <Select
+                value={currencyType}
+                onChange={(e) => setCurrencyType(e.target.value as CurrencyType)}
+                label="Currency"
                 sx={{
                   width: '100%',
-                  minWidth: '200px',
-                  '& .MuiInputBase-root': {
-                    width: '100%',
-                  },
-                  '& .MuiSelect-select': {
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '16.5px 14px'
-                  }
-                }} required>
-                <InputLabel>Currency</InputLabel>
-                <Select
-                  value={currencyType}
-                  onChange={(e) => setCurrencyType(e.target.value as CurrencyType)}
-                  label="Currency"
-                  sx={{
-                    width: '100%',
-                    minWidth: '200px',
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      '&:hover': {
-                        borderColor: '#00b8a9',
-                      },
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    '&:hover': {
                       borderColor: '#00b8a9',
                     },
-                  }}
-                >
-                  {/* Filter out non-numeric keys since CurrencyType is now numeric */}
-                  {Object.entries(CurrencyType)
-                    .filter(([key]) => !isNaN(Number(key)))
-                    .map(([key, _]) => (
-                      <MenuItem key={key} value={Number(key)}>
-                        {Number(key) === CurrencyType.Rupees ? 'Rupees (₹)' : 'Dollar ($)'}
-                      </MenuItem>
-                    ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={6} sx={{ p: 1.5 }}>
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <DatePicker
-                  label="Payment Due Date"
-                  value={paymentDueDate}
-                  onChange={(newValue) => setPaymentDueDate(newValue)}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      error: !!formErrors.paymentDueDate,
-                      helperText: formErrors.paymentDueDate,
-                      sx: {
-                        '& .MuiOutlinedInput-root': {
-                          '&:hover fieldset': {
-                            borderColor: '#00b8a9',
-                          },
-                          '&.Mui-focused fieldset': {
-                            borderColor: '#00b8a9',
-                          },
-                        }
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#00b8a9',
+                  },
+                }}
+              >
+                {/* Filter out non-numeric keys since CurrencyType is now numeric */}
+                {Object.entries(CurrencyType)
+                  .filter(([key]) => !isNaN(Number(key)))
+                  .map(([key, _]) => (
+                    <MenuItem key={key} value={Number(key)}>
+                      {Number(key) === CurrencyType.Rupees ? 'Rupees (₹)' : 'Dollar ($)'}
+                    </MenuItem>
+                  ))}
+              </Select>
+            </FormControl>
+
+            <TextField
+              fullWidth
+              label="Total Amount"
+              type="number"
+              value={totalAmount}
+              onChange={(e) => {
+                const value = e.target.value === '' ? '' : Number(e.target.value);
+                setTotalAmount(value);
+                if (typeof value === 'number' && typeof paidAmount === 'number') {
+                  setRemainingAmount(calculateRemainingAmount(value, paidAmount));
+                }
+              }}
+              error={!!formErrors.totalAmount}
+              helperText={formErrors.totalAmount}
+              required
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    {currencyType === CurrencyType.Rupees ? '₹' : '$'}
+                  </InputAdornment>
+                ),
+                inputProps: { min: 0.01, step: 0.01 }
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                }
+              }}
+            />
+
+            <TextField
+              fullWidth
+              label="Paid Amount"
+              type="number"
+              value={paidAmount}
+              onChange={(e) => {
+                const value = e.target.value === '' ? '' : Number(e.target.value);
+                setPaidAmount(value);
+                if (typeof totalAmount === 'number' && typeof value === 'number') {
+                  setRemainingAmount(calculateRemainingAmount(totalAmount, value));
+                }
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    {currencyType === CurrencyType.Rupees ? '₹' : '$'}
+                  </InputAdornment>
+                ),
+                inputProps: { min: 0, step: 0.01 }
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                }
+              }}
+            />
+
+            <TextField
+              fullWidth
+              label="Remaining Amount"
+              type="number"
+              value={remainingAmount}
+              disabled
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    {currencyType === CurrencyType.Rupees ? '₹' : '$'}
+                  </InputAdornment>
+                )
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                }
+              }}
+            />
+
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DatePicker
+                label="Payment Due Date"
+                value={paymentDueDate}
+                onChange={(newValue) => setPaymentDueDate(newValue)}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    error: !!formErrors.paymentDueDate,
+                    helperText: formErrors.paymentDueDate,
+                    sx: {
+                      '& .MuiOutlinedInput-root': {
+                        '&:hover fieldset': {
+                          borderColor: '#00b8a9',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#00b8a9',
+                        },
                       }
                     }
-                  }}
-                />
-              </LocalizationProvider>
-            </Grid>
-            <Grid item xs={12} md={8} sx={{ p: 1.5 }}>
-              <TextField
-                fullWidth
-                label="Recurring Frequency (Months)"
-                type="number"
-                value={recurringFrequencyMonths}
-                onChange={(e) => setRecurringFrequencyMonths(e.target.value === '' ? '' : Number(e.target.value))}
-                error={!!formErrors.recurringFrequencyMonths}
-                helperText={formErrors.recurringFrequencyMonths || 'Leave empty if not recurring'}
-                InputProps={{
-                  inputProps: { min: 1, max: 60, step: 1 }
-                }}
-                sx={{
-                  width: '100%',
-                  minWidth: '300px',
-                  '& .MuiInputBase-root': {
-                    width: '100%',
-                  },
-                  '& .MuiOutlinedInput-root': {
-                    width: '100%',
-                    '&:hover fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                  },
-                  '& .MuiOutlinedInput-input': {
-                    width: '100%'
                   }
                 }}
               />
-            </Grid>
-          </Grid>
+            </LocalizationProvider>
+
+            <TextField
+              fullWidth
+              label="Recurring Frequency (Months)"
+              type="number"
+              value={recurringFrequencyMonths}
+              onChange={(e) => setRecurringFrequencyMonths(e.target.value === '' ? '' : Number(e.target.value))}
+              error={!!formErrors.recurringFrequencyMonths}
+              helperText={formErrors.recurringFrequencyMonths || 'Leave empty if not recurring'}
+              InputProps={{
+                inputProps: { min: 1, max: 60, step: 1 }
+              }}
+              sx={{
+                width: '100%',
+                '& .MuiOutlinedInput-root': {
+                  width: '100%',
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                }
+              }}
+            />
+          </Box>
         </CardContent>
       </Card>
 
@@ -1067,120 +1029,114 @@ const DealForm: React.FC = () => {
               <InfoIcon fontSize="small" />
             </IconButton>
           </Box>
-          <Grid container spacing={3} sx={{ width: '100%', m: 0 }}>
-            <Grid item xs={12} md={6} sx={{ p: 1.5 }}>
-              <TextField
-                fullWidth
-                label="Referral Name"
-                value={referralName}
-                onChange={(e) => setReferralName(e.target.value)}
-                error={!!formErrors.referralName}
-                helperText={formErrors.referralName}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                  }
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6} sx={{ p: 1.5 }}>
-              <TextField
-                fullWidth
-                label="Referral Email"
-                type="email"
-                value={referralEmail}
-                onChange={(e) => setReferralEmail(e.target.value)}
-                error={!!formErrors.referralEmail}
-                helperText={formErrors.referralEmail}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                  }
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6} sx={{ p: 1.5 }}>
-              <TextField
-                fullWidth
-                label="Referral Phone"
-                value={referralPhone}
-                onChange={(e) => setReferralPhone(e.target.value)}
-                error={!!formErrors.referralPhone}
-                helperText={formErrors.referralPhone}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                  }
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={6} sx={{ p: 1.5 }}>
-              <TextField
-                fullWidth
-                label="Referral Commission"
-                type="number"
-                value={referralCommission}
-                onChange={(e) => setReferralCommission(e.target.value === '' ? '' : Number(e.target.value))}
-                error={!!formErrors.referralCommission}
-                helperText={formErrors.referralCommission}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      {currencyType === CurrencyType.Rupees ? '₹' : currencyType === CurrencyType.Dollar ? '$' : '$'}
-                    </InputAdornment>
-                  ),
-                  inputProps: { min: 0, step: 0.01 }
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                  }
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} sx={{ p: 1.5 }}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={isReferralCommissionPaid}
-                    onChange={(e) => setIsReferralCommissionPaid(e.target.checked)}
-                    sx={{
-                      '& .MuiSwitch-switchBase.Mui-checked': {
-                        color: '#00b8a9',
-                        '&:hover': {
-                          backgroundColor: alpha('#00b8a9', 0.1),
-                        },
-                      },
-                      '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                        backgroundColor: '#00b8a9',
-                      },
-                    }}
-                  />
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <TextField
+              fullWidth
+              label="Referral Name"
+              value={referralName}
+              onChange={(e) => setReferralName(e.target.value)}
+              error={!!formErrors.referralName}
+              helperText={formErrors.referralName}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
                 }
-                label="Referral Commission Paid"
-              />
-            </Grid>
-          </Grid>
+              }}
+            />
+
+            <TextField
+              fullWidth
+              label="Referral Email"
+              type="email"
+              value={referralEmail}
+              onChange={(e) => setReferralEmail(e.target.value)}
+              error={!!formErrors.referralEmail}
+              helperText={formErrors.referralEmail}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                }
+              }}
+            />
+
+            <TextField
+              fullWidth
+              label="Referral Phone"
+              value={referralPhone}
+              onChange={(e) => setReferralPhone(e.target.value)}
+              error={!!formErrors.referralPhone}
+              helperText={formErrors.referralPhone}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                }
+              }}
+            />
+
+            <TextField
+              fullWidth
+              label="Referral Commission"
+              type="number"
+              value={referralCommission}
+              onChange={(e) => setReferralCommission(e.target.value === '' ? '' : Number(e.target.value))}
+              error={!!formErrors.referralCommission}
+              helperText={formErrors.referralCommission}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    {currencyType === CurrencyType.Rupees ? '₹' : currencyType === CurrencyType.Dollar ? '$' : '$'}
+                  </InputAdornment>
+                ),
+                inputProps: { min: 0, step: 0.01 }
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                }
+              }}
+            />
+
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={isReferralCommissionPaid}
+                  onChange={(e) => setIsReferralCommissionPaid(e.target.checked)}
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: '#00b8a9',
+                      '&:hover': {
+                        backgroundColor: alpha('#00b8a9', 0.1),
+                      },
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                      backgroundColor: '#00b8a9',
+                    },
+                  }}
+                />
+              }
+              label="Referral Commission Paid"
+            />
+          </Box>
         </CardContent>
       </Card>
 
@@ -1195,38 +1151,29 @@ const DealForm: React.FC = () => {
               <InfoIcon fontSize="small" />
             </IconButton>
           </Box>
-          <Grid container spacing={3} sx={{ width: '100%', m: 0 }}>
-            <Grid item xs={12} sx={{ p: 1.5, width: '100%' }}>
-              <TextField
-                fullWidth
-                label="Notes"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                multiline
-                rows={4}
-                placeholder="Add any additional information about the deal here"
-                sx={{ 
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <TextField
+              fullWidth
+              label="Notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              multiline
+              rows={5}
+              placeholder="Add any additional information about the deal here"
+              sx={{
+                width: '100%',
+                '& .MuiOutlinedInput-root': {
                   width: '100%',
-                  minWidth: '100%',
-                  '& .MuiInputBase-root': {
-                    width: '100%',
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
                   },
-                  '& .MuiOutlinedInput-root': {
-                    width: '100%',
-                    '&:hover fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#00b8a9',
-                    },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
                   },
-                  '& .MuiOutlinedInput-input': {
-                    width: '100%'
-                  }
-                }}
-              />
-            </Grid>
-          </Grid>
+                }
+              }}
+            />
+          </Box>
         </CardContent>
       </Card>
 

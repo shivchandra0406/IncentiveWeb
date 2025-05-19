@@ -691,7 +691,7 @@ const TargetBasedDetails: React.FC<{
           {plan.provideAdditionalIncentiveOnExceeding && (
             <Tooltip title="Additional percentage incentive on exceeding target" arrow>
               <Chip
-                label={`Additional ${plan.additionalIncentivePercentage}% on Exceeding`}
+                label={`Additional ${plan.additionalIncentiveOnExceeding}% on Exceeding`}
                 color="primary"
                 size="small"
                 sx={{

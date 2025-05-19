@@ -46,7 +46,9 @@ interface FormErrors {
 const ProjectForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const isEditMode = !!id;
+  const path = window.location.pathname;
+  const isViewMode = path.includes('/view/');
+  const isEditMode = !!id && !isViewMode;
 
   // Form state
   const [name, setName] = useState('');
@@ -140,6 +142,9 @@ const ProjectForm: React.FC = () => {
   };
 
   const validateForm = (): boolean => {
+    // Skip validation in view mode
+    if (isViewMode) return true;
+
     const errors: FormErrors = {};
 
     if (!name.trim()) errors.name = 'Project name is required';
@@ -223,7 +228,7 @@ const ProjectForm: React.FC = () => {
   return (
     <Box>
       <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
-        {isEditMode ? 'Edit' : 'Create'} Project
+        {isViewMode ? 'Project Details' : isEditMode ? 'Edit Project' : 'Create Project'}
       </Typography>
 
       {error && (
@@ -243,73 +248,76 @@ const ProjectForm: React.FC = () => {
           Basic Information
         </Typography>
 
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Project Name *"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              error={!!formErrors.name}
-              helperText={formErrors.name}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  '&:hover fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                }
-              }}
-            />
-          </Grid>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <TextField
+            fullWidth
+            label="Project Name *"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            error={!isViewMode && !!formErrors.name}
+            helperText={!isViewMode && formErrors.name}
+            InputProps={{
+              readOnly: isViewMode
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '&:hover fieldset': {
+                  borderColor: '#00b8a9',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#00b8a9',
+                },
+              }
+            }}
+          />
 
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth error={!!formErrors.propertyType}>
-              <InputLabel>Property Type *</InputLabel>
-              <Select
-                value={propertyType}
-                label="Property Type *"
-                onChange={(e) => setPropertyType(e.target.value)}
-                sx={{
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#00b8a9',
-                  },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#00b8a9',
-                  },
-                }}
-              >
-                {propertyTypes.map((type) => (
-                  <MenuItem key={type} value={type}>{type}</MenuItem>
-                ))}
-              </Select>
-              {formErrors.propertyType && <FormHelperText>{formErrors.propertyType}</FormHelperText>}
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Description"
-              multiline
-              rows={3}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  '&:hover fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                }
+          <FormControl fullWidth error={!isViewMode && !!formErrors.propertyType}>
+            <InputLabel>Property Type *</InputLabel>
+            <Select
+              value={propertyType}
+              label="Property Type *"
+              onChange={(e) => setPropertyType(e.target.value)}
+              inputProps={{
+                readOnly: isViewMode
               }}
-            />
-          </Grid>
-        </Grid>
+              sx={{
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#00b8a9',
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#00b8a9',
+                },
+              }}
+            >
+              {propertyTypes.map((type) => (
+                <MenuItem key={type} value={type}>{type}</MenuItem>
+              ))}
+            </Select>
+            {!isViewMode && formErrors.propertyType && <FormHelperText>{formErrors.propertyType}</FormHelperText>}
+          </FormControl>
+
+          <TextField
+            fullWidth
+            label="Description"
+            multiline
+            rows={3}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            InputProps={{
+              readOnly: isViewMode
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '&:hover fieldset': {
+                  borderColor: '#00b8a9',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#00b8a9',
+                },
+              }
+            }}
+          />
+        </Box>
       </Paper>
 
       <Paper elevation={0} sx={{ p: 3, borderRadius: 2, boxShadow: '0 1px 4px rgba(0,0,0,0.05)', mb: 3 }}>
@@ -317,261 +325,239 @@ const ProjectForm: React.FC = () => {
           Location & Property Details
         </Typography>
 
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Location *"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              error={!!formErrors.location}
-              helperText={formErrors.location}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  '&:hover fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                }
-              }}
-            />
-          </Grid>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <TextField
+            fullWidth
+            label="Location *"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            error={!!formErrors.location}
+            helperText={formErrors.location}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '&:hover fieldset': {
+                  borderColor: '#00b8a9',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#00b8a9',
+                },
+              }
+            }}
+          />
 
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="MLS Listing ID"
-              value={mlsListingId}
-              onChange={(e) => setMlsListingId(e.target.value)}
-              error={!!formErrors.mlsListingId}
-              helperText={formErrors.mlsListingId}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  '&:hover fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                }
-              }}
-            />
-          </Grid>
+          <TextField
+            fullWidth
+            label="MLS Listing ID"
+            value={mlsListingId}
+            onChange={(e) => setMlsListingId(e.target.value)}
+            error={!!formErrors.mlsListingId}
+            helperText={formErrors.mlsListingId}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '&:hover fieldset': {
+                  borderColor: '#00b8a9',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#00b8a9',
+                },
+              }
+            }}
+          />
 
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Price *"
-              type="number"
-              value={price}
-              onChange={(e) => setPrice(e.target.value === '' ? '' : Number(e.target.value))}
-              error={!!formErrors.price}
-              helperText={formErrors.price}
-              InputProps={{
-                inputProps: { min: 0 }
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  '&:hover fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                }
-              }}
-            />
-          </Grid>
+          <TextField
+            fullWidth
+            label="Price *"
+            type="number"
+            value={price}
+            onChange={(e) => setPrice(e.target.value === '' ? '' : Number(e.target.value))}
+            error={!!formErrors.price}
+            helperText={formErrors.price}
+            InputProps={{
+              inputProps: { min: 0 }
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '&:hover fieldset': {
+                  borderColor: '#00b8a9',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#00b8a9',
+                },
+              }
+            }}
+          />
 
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Total Value"
-              type="number"
-              value={totalValue}
-              onChange={(e) => setTotalValue(e.target.value === '' ? '' : Number(e.target.value))}
-              error={!!formErrors.totalValue}
-              helperText={formErrors.totalValue}
-              InputProps={{
-                inputProps: { min: 0 }
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  '&:hover fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                }
-              }}
-            />
-          </Grid>
+          <TextField
+            fullWidth
+            label="Total Value"
+            type="number"
+            value={totalValue}
+            onChange={(e) => setTotalValue(e.target.value === '' ? '' : Number(e.target.value))}
+            error={!!formErrors.totalValue}
+            helperText={formErrors.totalValue}
+            InputProps={{
+              inputProps: { min: 0 }
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '&:hover fieldset': {
+                  borderColor: '#00b8a9',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#00b8a9',
+                },
+              }
+            }}
+          />
 
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Area (sq ft) *"
-              type="number"
-              value={area}
-              onChange={(e) => setArea(e.target.value === '' ? '' : Number(e.target.value))}
-              error={!!formErrors.area}
-              helperText={formErrors.area}
-              InputProps={{
-                inputProps: { min: 0 }
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  '&:hover fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                }
-              }}
-            />
-          </Grid>
+          <TextField
+            fullWidth
+            label="Area (sq ft) *"
+            type="number"
+            value={area}
+            onChange={(e) => setArea(e.target.value === '' ? '' : Number(e.target.value))}
+            error={!!formErrors.area}
+            helperText={formErrors.area}
+            InputProps={{
+              inputProps: { min: 0 }
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '&:hover fieldset': {
+                  borderColor: '#00b8a9',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#00b8a9',
+                },
+              }
+            }}
+          />
 
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Year Built"
-              type="number"
-              value={yearBuilt}
-              onChange={(e) => setYearBuilt(e.target.value === '' ? '' : Number(e.target.value))}
-              error={!!formErrors.yearBuilt}
-              helperText={formErrors.yearBuilt}
-              InputProps={{
-                inputProps: { min: 0 }
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  '&:hover fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                }
-              }}
-            />
-          </Grid>
+          <TextField
+            fullWidth
+            label="Year Built"
+            type="number"
+            value={yearBuilt}
+            onChange={(e) => setYearBuilt(e.target.value === '' ? '' : Number(e.target.value))}
+            error={!!formErrors.yearBuilt}
+            helperText={formErrors.yearBuilt}
+            InputProps={{
+              inputProps: { min: 0 }
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '&:hover fieldset': {
+                  borderColor: '#00b8a9',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#00b8a9',
+                },
+              }
+            }}
+          />
 
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Bedrooms *"
-              type="number"
-              value={bedrooms}
-              onChange={(e) => setBedrooms(e.target.value === '' ? '' : Number(e.target.value))}
-              error={!!formErrors.bedrooms}
-              helperText={formErrors.bedrooms}
-              InputProps={{
-                inputProps: { min: 0 }
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  '&:hover fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                }
-              }}
-            />
-          </Grid>
+          <TextField
+            fullWidth
+            label="Bedrooms *"
+            type="number"
+            value={bedrooms}
+            onChange={(e) => setBedrooms(e.target.value === '' ? '' : Number(e.target.value))}
+            error={!!formErrors.bedrooms}
+            helperText={formErrors.bedrooms}
+            InputProps={{
+              inputProps: { min: 0 }
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '&:hover fieldset': {
+                  borderColor: '#00b8a9',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#00b8a9',
+                },
+              }
+            }}
+          />
 
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Bathrooms *"
-              type="number"
-              value={bathrooms}
-              onChange={(e) => setBathrooms(e.target.value === '' ? '' : Number(e.target.value))}
-              error={!!formErrors.bathrooms}
-              helperText={formErrors.bathrooms}
-              InputProps={{
-                inputProps: { min: 0 }
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  '&:hover fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                }
-              }}
-            />
-          </Grid>
+          <TextField
+            fullWidth
+            label="Bathrooms *"
+            type="number"
+            value={bathrooms}
+            onChange={(e) => setBathrooms(e.target.value === '' ? '' : Number(e.target.value))}
+            error={!!formErrors.bathrooms}
+            helperText={formErrors.bathrooms}
+            InputProps={{
+              inputProps: { min: 0 }
+            }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '&:hover fieldset': {
+                  borderColor: '#00b8a9',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#00b8a9',
+                },
+              }
+            }}
+          />
 
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Amenities"
-              multiline
-              rows={2}
-              value={amenities}
-              onChange={(e) => setAmenities(e.target.value)}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  '&:hover fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                }
-              }}
-            />
-          </Grid>
+          <TextField
+            fullWidth
+            label="Amenities"
+            multiline
+            rows={2}
+            value={amenities}
+            onChange={(e) => setAmenities(e.target.value)}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '&:hover fieldset': {
+                  borderColor: '#00b8a9',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#00b8a9',
+                },
+              }
+            }}
+          />
 
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Ownership Details"
-              value={ownershipDetails}
-              onChange={(e) => setOwnershipDetails(e.target.value)}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  '&:hover fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                }
-              }}
-            />
-          </Grid>
+          <TextField
+            fullWidth
+            label="Ownership Details"
+            value={ownershipDetails}
+            onChange={(e) => setOwnershipDetails(e.target.value)}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '&:hover fieldset': {
+                  borderColor: '#00b8a9',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#00b8a9',
+                },
+              }
+            }}
+          />
 
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Images/Media URLs"
-              multiline
-              rows={2}
-              value={imagesMedia}
-              onChange={(e) => setImagesMedia(e.target.value)}
-              placeholder="Enter comma-separated URLs for images or media files"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  '&:hover fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                }
-              }}
-            />
-          </Grid>
-        </Grid>
+          <TextField
+            fullWidth
+            label="Images/Media URLs"
+            multiline
+            rows={2}
+            value={imagesMedia}
+            onChange={(e) => setImagesMedia(e.target.value)}
+            placeholder="Enter comma-separated URLs for images or media files"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '&:hover fieldset': {
+                  borderColor: '#00b8a9',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#00b8a9',
+                },
+              }
+            }}
+          />
+        </Box>
       </Paper>
 
       <Paper elevation={0} sx={{ p: 3, borderRadius: 2, boxShadow: '0 1px 4px rgba(0,0,0,0.05)', mb: 3 }}>
@@ -579,170 +565,215 @@ const ProjectForm: React.FC = () => {
           Listing Details
         </Typography>
 
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth error={!!formErrors.status}>
-              <InputLabel>Status *</InputLabel>
-              <Select
-                value={status}
-                label="Status *"
-                onChange={(e) => setStatus(e.target.value)}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <FormControl fullWidth error={!!formErrors.status}>
+            <InputLabel>Status *</InputLabel>
+            <Select
+              value={status}
+              label="Status *"
+              onChange={(e) => setStatus(e.target.value)}
+              sx={{
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#00b8a9',
+                },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                  borderColor: '#00b8a9',
+                },
+              }}
+            >
+              {statusOptions.map((option) => (
+                <MenuItem key={option} value={option}>{option}</MenuItem>
+              ))}
+            </Select>
+            {formErrors.status && <FormHelperText>{formErrors.status}</FormHelperText>}
+          </FormControl>
+
+          <FormControlLabel
+            control={
+              <Switch
+                checked={isActive}
+                onChange={(e) => setIsActive(e.target.checked)}
+                color="primary"
                 sx={{
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#00b8a9',
+                  '& .MuiSwitch-switchBase.Mui-checked': {
+                    color: '#00b8a9',
                   },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#00b8a9',
+                  '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                    backgroundColor: '#00b8a9',
                   },
                 }}
-              >
-                {statusOptions.map((option) => (
-                  <MenuItem key={option} value={option}>{option}</MenuItem>
-                ))}
-              </Select>
-              {formErrors.status && <FormHelperText>{formErrors.status}</FormHelperText>}
-            </FormControl>
-          </Grid>
+              />
+            }
+            label="Active Listing"
+          />
 
-          <Grid item xs={12} md={6}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={isActive}
-                  onChange={(e) => setIsActive(e.target.checked)}
-                  color="primary"
-                />
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <DatePicker
+              label="Date Listed *"
+              value={dateListed}
+              onChange={(newValue) => setDateListed(newValue)}
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  error: !!formErrors.dateListed,
+                  helperText: formErrors.dateListed,
+                  sx: {
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': {
+                        borderColor: '#00b8a9',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#00b8a9',
+                      },
+                    }
+                  }
+                }
+              }}
+            />
+          </LocalizationProvider>
+
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <DatePicker
+              label="Listing Expiry Date *"
+              value={listingExpiryDate}
+              onChange={(newValue) => setListingExpiryDate(newValue)}
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  error: !!formErrors.listingExpiryDate,
+                  helperText: formErrors.listingExpiryDate,
+                  sx: {
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': {
+                        borderColor: '#00b8a9',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#00b8a9',
+                      },
+                    }
+                  }
+                }
+              }}
+            />
+          </LocalizationProvider>
+
+          <TextField
+            fullWidth
+            label="Agent Name *"
+            value={agentName}
+            onChange={(e) => setAgentName(e.target.value)}
+            error={!!formErrors.agentName}
+            helperText={formErrors.agentName}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '&:hover fieldset': {
+                  borderColor: '#00b8a9',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#00b8a9',
+                },
               }
-              label="Active Listing"
-              sx={{ mt: 1 }}
-            />
-          </Grid>
+            }}
+          />
 
-          <Grid item xs={12} md={6}>
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <DatePicker
-                label="Date Listed *"
-                value={dateListed}
-                onChange={(newValue) => setDateListed(newValue)}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    error: !!formErrors.dateListed,
-                    helperText: formErrors.dateListed,
-                    sx: {
-                      '& .MuiOutlinedInput-root': {
-                        '&:hover fieldset': {
-                          borderColor: '#00b8a9',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#00b8a9',
-                        },
-                      }
-                    }
-                  }
-                }}
-              />
-            </LocalizationProvider>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <DatePicker
-                label="Listing Expiry Date *"
-                value={listingExpiryDate}
-                onChange={(newValue) => setListingExpiryDate(newValue)}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    error: !!formErrors.listingExpiryDate,
-                    helperText: formErrors.listingExpiryDate,
-                    sx: {
-                      '& .MuiOutlinedInput-root': {
-                        '&:hover fieldset': {
-                          borderColor: '#00b8a9',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#00b8a9',
-                        },
-                      }
-                    }
-                  }
-                }}
-              />
-            </LocalizationProvider>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Agent Name *"
-              value={agentName}
-              onChange={(e) => setAgentName(e.target.value)}
-              error={!!formErrors.agentName}
-              helperText={formErrors.agentName}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  '&:hover fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                }
-              }}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Agent Contact *"
-              value={agentContact}
-              onChange={(e) => setAgentContact(e.target.value)}
-              error={!!formErrors.agentContact}
-              helperText={formErrors.agentContact}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  '&:hover fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: '#00b8a9',
-                  },
-                }
-              }}
-            />
-          </Grid>
-        </Grid>
+          <TextField
+            fullWidth
+            label="Agent Contact *"
+            value={agentContact}
+            onChange={(e) => setAgentContact(e.target.value)}
+            error={!!formErrors.agentContact}
+            helperText={formErrors.agentContact}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '&:hover fieldset': {
+                  borderColor: '#00b8a9',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#00b8a9',
+                },
+              }
+            }}
+          />
+        </Box>
       </Paper>
 
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-        <Button
-          variant="outlined"
-          onClick={() => navigate('/projects')}
-          sx={{ mr: 2 }}
-        >
-          Cancel
-        </Button>
-        <Button
-          variant="contained"
-          onClick={handleSubmit}
-          disabled={loading}
-          sx={{
-            bgcolor: '#00b8a9',
-            '&:hover': {
-              bgcolor: '#00a99d',
-            }
-          }}
-        >
-          {loading ? (
-            <CircularProgress size={24} color="inherit" />
-          ) : isEditMode ? (
-            'Update Project'
-          ) : (
-            'Create Project'
-          )}
-        </Button>
+        {isViewMode ? (
+          <>
+            <Button
+              variant="outlined"
+              onClick={() => navigate('/projects')}
+              sx={{
+                mr: 2,
+                borderColor: '#00b8a9',
+                color: '#00b8a9',
+                '&:hover': {
+                  borderColor: '#00a99d',
+                  backgroundColor: 'rgba(0, 184, 169, 0.08)',
+                },
+                px: 3,
+                py: 1
+              }}
+            >
+              Back to Projects
+            </Button>
+            <Button
+              variant="contained"
+              onClick={() => navigate(`/projects/edit/${id}`)}
+              sx={{
+                bgcolor: '#00b8a9',
+                '&:hover': {
+                  bgcolor: '#00a99d',
+                },
+                px: 3,
+                py: 1
+              }}
+            >
+              Edit Project
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button
+              variant="outlined"
+              onClick={() => navigate('/projects')}
+              sx={{
+                mr: 2,
+                borderColor: '#00b8a9',
+                color: '#00b8a9',
+                '&:hover': {
+                  borderColor: '#00a99d',
+                  backgroundColor: 'rgba(0, 184, 169, 0.08)',
+                },
+                px: 3,
+                py: 1
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleSubmit}
+              disabled={loading}
+              sx={{
+                bgcolor: '#00b8a9',
+                '&:hover': {
+                  bgcolor: '#00a99d',
+                },
+                px: 3,
+                py: 1
+              }}
+            >
+              {loading ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : isEditMode ? (
+                'Update Project'
+              ) : (
+                'Create Project'
+              )}
+            </Button>
+          </>
+        )}
       </Box>
     </Box>
   );

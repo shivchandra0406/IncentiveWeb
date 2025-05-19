@@ -70,7 +70,7 @@ export interface TargetBasedIncentivePlan extends IncentivePlanBase {
   incentiveAfterExceedingTarget: boolean;
   includeSalaryInTarget: boolean;
   provideAdditionalIncentiveOnExceeding?: boolean;
-  additionalIncentivePercentage?: number;
+  additionalIncentiveOnExceeding?: number;
 }
 
 // Role-Based Incentive Plan
@@ -89,7 +89,7 @@ export interface RoleBasedIncentivePlan extends IncentivePlanBase {
   incentiveAfterExceedingTarget: boolean;
   includeSalaryInTarget: boolean;
   provideAdditionalIncentiveOnExceeding?: boolean;
-  additionalIncentivePercentage?: number;
+  additionalIncentiveOnExceeding?: number;
 }
 
 // Project-Based Incentive Plan

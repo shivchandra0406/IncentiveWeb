@@ -50,7 +50,7 @@ interface FormErrors {
   calculationType?: string;
   incentiveValue?: string;
   currencyType?: string;
-  additionalIncentivePercentage?: string;
+  additionalIncentiveOnExceeding?: string;
 }
 
 interface ModernTargetBasedPlanFormProps {
@@ -81,7 +81,7 @@ const ModernTargetBasedPlanForm: React.FC<ModernTargetBasedPlanFormProps> = ({ i
   // Target configuration options
   const [incentiveAfterExceedingTarget, setIncentiveAfterExceedingTarget] = useState(false);
   const [provideAdditionalIncentiveOnExceeding, setProvideAdditionalIncentiveOnExceeding] = useState(false);
-  const [additionalIncentivePercentage, setAdditionalIncentivePercentage] = useState<number | ''>('');
+  const [additionalIncentiveOnExceeding, setAdditionalIncentiveOnExceeding] = useState<number | ''>('');
   const [includeSalaryInTarget, setIncludeSalaryInTarget] = useState(false);
 
   // Form state
@@ -125,7 +125,7 @@ const ModernTargetBasedPlanForm: React.FC<ModernTargetBasedPlanFormProps> = ({ i
     setIncentiveAfterExceedingTarget(plan.incentiveAfterExceedingTarget);
     setIncludeSalaryInTarget(plan.includeSalaryInTarget);
     setProvideAdditionalIncentiveOnExceeding(plan.provideAdditionalIncentiveOnExceeding || false);
-    setAdditionalIncentivePercentage(plan.additionalIncentivePercentage || '');
+    setAdditionalIncentiveOnExceeding(plan.additionalIncentiveOnExceeding || '');
   };
 
   const fetchPlanDetails = async () => {
@@ -225,8 +225,8 @@ const ModernTargetBasedPlanForm: React.FC<ModernTargetBasedPlanFormProps> = ({ i
     }
 
     // Validate additional incentive percentage if additional incentive is enabled
-    if (provideAdditionalIncentiveOnExceeding && (!additionalIncentivePercentage && additionalIncentivePercentage !== 0)) {
-      errors.additionalIncentivePercentage = 'Please specify the percentage of incentive to be given on the exceeded amount';
+    if (provideAdditionalIncentiveOnExceeding && (!additionalIncentiveOnExceeding && additionalIncentiveOnExceeding !== 0)) {
+      errors.additionalIncentiveOnExceeding = 'Please specify the percentage of incentive to be given on the exceeded amount';
     }
 
     setFormErrors(errors);
@@ -264,8 +264,8 @@ const ModernTargetBasedPlanForm: React.FC<ModernTargetBasedPlanFormProps> = ({ i
         incentiveAfterExceedingTarget,
         includeSalaryInTarget,
         provideAdditionalIncentiveOnExceeding,
-        additionalIncentivePercentage: provideAdditionalIncentiveOnExceeding && additionalIncentivePercentage !== ''
-          ? Number(additionalIncentivePercentage)
+        additionalIncentiveOnExceeding: provideAdditionalIncentiveOnExceeding && additionalIncentiveOnExceeding !== ''
+          ? Number(additionalIncentiveOnExceeding)
           : undefined
       };
 
@@ -702,7 +702,7 @@ const ModernTargetBasedPlanForm: React.FC<ModernTargetBasedPlanFormProps> = ({ i
 
                       // Reset additional incentive percentage if checkbox is unchecked
                       if (!e.target.checked) {
-                        setAdditionalIncentivePercentage('');
+                        setAdditionalIncentiveOnExceeding('');
                       }
                     }}
                     sx={{
@@ -723,10 +723,10 @@ const ModernTargetBasedPlanForm: React.FC<ModernTargetBasedPlanFormProps> = ({ i
                     fullWidth
                     label="Additional Incentive Percentage (%)"
                     type="number"
-                    value={additionalIncentivePercentage}
-                    onChange={(e) => setAdditionalIncentivePercentage(e.target.value === '' ? '' : Number(e.target.value))}
-                    error={!!formErrors.additionalIncentivePercentage}
-                    helperText={formErrors.additionalIncentivePercentage || 'Percentage of additional incentive to be given on the exceeded amount'}
+                    value={additionalIncentiveOnExceeding}
+                    onChange={(e) => setAdditionalIncentiveOnExceeding(e.target.value === '' ? '' : Number(e.target.value))}
+                    error={!!formErrors.additionalIncentiveOnExceeding}
+                    helperText={formErrors.additionalIncentiveOnExceeding || 'Percentage of additional incentive to be given on the exceeded amount'}
                     // Using min/max attributes on the input
                     // InputProps is deprecated but still works
                     InputProps={{
