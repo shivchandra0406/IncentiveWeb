@@ -1,0 +1,1069 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Typography,
+  Paper,
+  TextField,
+  Button,
+  Grid,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormHelperText,
+  CircularProgress,
+  Alert,
+  InputAdornment,
+} from '@mui/material';
+import { useNavigate, useParams } from 'react-router-dom';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import dealService from '../../infrastructure/deals/DealServiceImpl';
+import teamService from '../../infrastructure/teams/TeamServiceImpl';
+import incentiveRuleService from '../../infrastructure/incentiveRules/IncentiveRuleServiceImpl';
+import { DealStatus, CurrencyType } from '../../core/models/deal';
+import type{ Team } from '../../core/models/incentivePlanTypes';
+import type { CreateDealRequest, UpdateDealRequest } from '../../core/models/deal';
+
+interface FormErrors {
+  dealName?: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  totalAmount?: string;
+  currencyType?: string;
+  taxPercentage?: string;
+  discountAmount?: string;
+  status?: string;
+  dealDate?: string;
+  paymentDueDate?: string;
+  source?: string;
+  referralName?: string;
+  referralEmail?: string;
+  referralPhone?: string;
+  referralCommission?: string;
+  recurringFrequencyMonths?: string;
+}
+
+const DealForm: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const isEditMode = !!id;
+
+  // Form state
+  const [dealName, setDealName] = useState('');
+  const [customerName, setCustomerName] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerAddress, setCustomerAddress] = useState('');
+  const [totalAmount, setTotalAmount] = useState<number | ''>('');
+  const [currencyType, setCurrencyType] = useState<CurrencyType>(CurrencyType.Rupees);
+  const [taxPercentage, setTaxPercentage] = useState<number | ''>(0);
+  const [discountAmount, setDiscountAmount] = useState<number | ''>(0);
+  const [status, setStatus] = useState<DealStatus>(DealStatus.New);
+  const [dealDate, setDealDate] = useState<Date | null>(new Date());
+  const [paymentDueDate, setPaymentDueDate] = useState<Date | null>(null);
+  const [source, setSource] = useState('');
+  const [notes, setNotes] = useState('');
+  const [referralName, setReferralName] = useState('');
+  const [referralEmail, setReferralEmail] = useState('');
+  const [referralPhone, setReferralPhone] = useState('');
+  const [referralCommission, setReferralCommission] = useState<number | ''>('');
+  const [isReferralCommissionPaid, setIsReferralCommissionPaid] = useState(false);
+  const [recurringFrequencyMonths, setRecurringFrequencyMonths] = useState<number | ''>('');
+  const [teamId, setTeamId] = useState<string | ''>('');
+  const [incentiveRuleId, setIncentiveRuleId] = useState<string | ''>('');
+
+  // Data state
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [incentiveRules, setIncentiveRules] = useState<any[]>([]);
+  const [loadingTeams, setLoadingTeams] = useState(false);
+  const [loadingIncentiveRules, setLoadingIncentiveRules] = useState(false);
+
+  // UI state
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
+
+  useEffect(() => {
+    if (isEditMode && id) {
+      fetchDealDetails(id);
+    }
+
+    // Fetch teams and incentive rules regardless of mode
+    fetchTeams();
+    fetchIncentiveRules();
+  }, [id, isEditMode]);
+
+  const fetchTeams = async () => {
+    try {
+      setLoadingTeams(true);
+      const response = await teamService.getTeams();
+      if (response.succeeded) {
+        setTeams(response.data);
+      } else {
+        console.error('Failed to fetch teams:', response.message);
+      }
+    } catch (err: any) {
+      console.error('Error fetching teams:', err);
+    } finally {
+      setLoadingTeams(false);
+    }
+  };
+
+  const fetchIncentiveRules = async () => {
+    try {
+      setLoadingIncentiveRules(true);
+      const response = await incentiveRuleService.getIncentiveRules();
+      if (response.succeeded) {
+        setIncentiveRules(response.data);
+      } else {
+        console.error('Failed to fetch incentive rules:', response.message);
+      }
+    } catch (err: any) {
+      console.error('Error fetching incentive rules:', err);
+    } finally {
+      setLoadingIncentiveRules(false);
+    }
+  };
+
+  const fetchDealDetails = async (dealId: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await dealService.getDealById(dealId);
+
+      if (response.succeeded && response.data) {
+        const deal = response.data;
+        setDealName(deal.dealName);
+        setCustomerName(deal.customerName);
+        setCustomerEmail(deal.customerEmail || '');
+        setCustomerPhone(deal.customerPhone || '');
+        setCustomerAddress(deal.customerAddress || '');
+        setTotalAmount(deal.totalAmount);
+        setCurrencyType(deal.currencyType);
+        setTaxPercentage(deal.taxPercentage);
+        setDiscountAmount(deal.discountAmount);
+        setStatus(deal.status);
+        setDealDate(deal.dealDate ? new Date(deal.dealDate) : new Date());
+        setPaymentDueDate(deal.paymentDueDate ? new Date(deal.paymentDueDate) : null);
+        setSource(deal.source);
+        setNotes(deal.notes || '');
+        setReferralName(deal.referralName || '');
+        setReferralEmail(deal.referralEmail || '');
+        setReferralPhone(deal.referralPhone || '');
+        setReferralCommission(deal.referralCommission || '');
+        setIsReferralCommissionPaid(deal.isReferralCommissionPaid || false);
+        setRecurringFrequencyMonths(deal.recurringFrequencyMonths || '');
+        setTeamId(deal.teamId || '');
+        setIncentiveRuleId(deal.incentiveRuleId || '');
+      } else {
+        setError(response.message || 'Failed to fetch deal details');
+      }
+    } catch (err: any) {
+      console.error('Error fetching deal details:', err);
+      setError(err.message || 'An error occurred while fetching deal details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const errors: FormErrors = {};
+
+    if (!dealName.trim()) errors.dealName = 'Deal name is required';
+    if (dealName.length > 200) errors.dealName = 'Deal name must be less than 200 characters';
+
+    if (!customerName.trim()) errors.customerName = 'Customer name is required';
+    if (customerName.length > 200) errors.customerName = 'Customer name must be less than 200 characters';
+
+    if (customerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail)) {
+      errors.customerEmail = 'Invalid email format';
+    }
+    if (customerEmail && customerEmail.length > 100) errors.customerEmail = 'Email must be less than 100 characters';
+
+    if (customerPhone && customerPhone.length > 50) errors.customerPhone = 'Phone must be less than 50 characters';
+
+    if (totalAmount === '') errors.totalAmount = 'Total amount is required';
+    if (typeof totalAmount === 'number' && totalAmount < 0) errors.totalAmount = 'Total amount must be positive';
+
+    if (!currencyType) errors.currencyType = 'Currency type is required';
+
+    if (taxPercentage === '') errors.taxPercentage = 'Tax percentage is required';
+    if (typeof taxPercentage === 'number' && (taxPercentage < 0 || taxPercentage > 100)) {
+      errors.taxPercentage = 'Tax percentage must be between 0 and 100';
+    }
+
+    if (discountAmount === '') errors.discountAmount = 'Discount amount is required';
+    if (typeof discountAmount === 'number' && discountAmount < 0) {
+      errors.discountAmount = 'Discount amount must be positive';
+    }
+
+    if (!status) errors.status = 'Status is required';
+
+    if (!dealDate) errors.dealDate = 'Deal date is required';
+
+    if (!source.trim()) errors.source = 'Source is required';
+    if (source.length > 100) errors.source = 'Source must be less than 100 characters';
+
+    if (referralName && referralName.length > 200) {
+      errors.referralName = 'Referral name must be less than 200 characters';
+    }
+
+    if (referralEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(referralEmail)) {
+      errors.referralEmail = 'Invalid referral email format';
+    }
+    if (referralEmail && referralEmail.length > 100) {
+      errors.referralEmail = 'Referral email must be less than 100 characters';
+    }
+
+    if (referralPhone && referralPhone.length > 50) {
+      errors.referralPhone = 'Referral phone must be less than 50 characters';
+    }
+
+    if (referralCommission !== '' && typeof referralCommission === 'number' && referralCommission < 0) {
+      errors.referralCommission = 'Referral commission must be positive';
+    }
+
+    if (recurringFrequencyMonths !== '' && typeof recurringFrequencyMonths === 'number' &&
+        (recurringFrequencyMonths < 0 || recurringFrequencyMonths > 60)) {
+      errors.recurringFrequencyMonths = 'Recurring frequency must be between 0 and 60 months';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+      setSuccess(null);
+
+      if (isEditMode && id) {
+        // Update existing deal
+        const updateData: UpdateDealRequest = {
+          dealName,
+          customerName,
+          customerEmail: customerEmail || undefined,
+          customerPhone: customerPhone || undefined,
+          customerAddress: customerAddress || undefined,
+          totalAmount: typeof totalAmount === 'number' ? totalAmount : 0,
+          currencyType,
+          taxPercentage: typeof taxPercentage === 'number' ? taxPercentage : 0,
+          discountAmount: typeof discountAmount === 'number' ? discountAmount : 0,
+          status,
+          paymentDueDate: paymentDueDate ? paymentDueDate.toISOString() : undefined,
+          teamId: teamId || undefined,
+          referralName: referralName || undefined,
+          referralEmail: referralEmail || undefined,
+          referralPhone: referralPhone || undefined,
+          referralCommission: typeof referralCommission === 'number' ? referralCommission : undefined,
+          isReferralCommissionPaid,
+          source,
+          incentiveRuleId: incentiveRuleId || undefined,
+          notes: notes || undefined,
+          recurringFrequencyMonths: typeof recurringFrequencyMonths === 'number' ? recurringFrequencyMonths : undefined
+        };
+
+        const response = await dealService.updateDeal(id, updateData);
+        if (response.succeeded) {
+          setSuccess('Deal updated successfully');
+          setTimeout(() => {
+            navigate('/deals');
+          }, 1500);
+        } else {
+          setError(response.message || 'Failed to update deal');
+        }
+      } else {
+        // Create new deal
+        const createData: CreateDealRequest = {
+          dealName,
+          customerName,
+          customerEmail: customerEmail || undefined,
+          customerPhone: customerPhone || undefined,
+          customerAddress: customerAddress || undefined,
+          totalAmount: typeof totalAmount === 'number' ? totalAmount : 0,
+          currencyType,
+          taxPercentage: typeof taxPercentage === 'number' ? taxPercentage : 0,
+          discountAmount: typeof discountAmount === 'number' ? discountAmount : 0,
+          status,
+          dealDate: dealDate ? dealDate.toISOString() : new Date().toISOString(),
+          paymentDueDate: paymentDueDate ? paymentDueDate.toISOString() : undefined,
+          teamId: teamId || undefined,
+          referralName: referralName || undefined,
+          referralEmail: referralEmail || undefined,
+          referralPhone: referralPhone || undefined,
+          referralCommission: typeof referralCommission === 'number' ? referralCommission : undefined,
+          source,
+          incentivePlanId: incentiveRuleId || undefined,
+          notes: notes || undefined,
+          recurringFrequencyMonths: typeof recurringFrequencyMonths === 'number' ? recurringFrequencyMonths : undefined
+        };
+
+        const response = await dealService.createDeal(createData);
+        if (response.succeeded) {
+          setSuccess('Deal created successfully');
+          setTimeout(() => {
+            navigate('/deals');
+          }, 1500);
+        } else {
+          setError(response.message || 'Failed to create deal');
+        }
+      }
+    } catch (err: any) {
+      console.error('Error saving deal:', err);
+      setError(err.message || 'An error occurred while saving the deal');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Box sx={{ width: '100%', padding: '20px 0', maxWidth: '1200px', margin: '0 auto' }}>
+      <Typography variant="h5" sx={{ mb: 4, fontWeight: 600, color: '#00b8a9', borderBottom: '3px solid #00b8a9', width: '100%', paddingBottom: '10px' }}>
+        {isEditMode ? 'Edit' : 'Create'} Deal
+      </Typography>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+
+      {success && (
+        <Alert severity="success" sx={{ mb: 3 }}>
+          {success}
+        </Alert>
+      )}
+
+      <Paper elevation={0} sx={{ p: 4, borderRadius: 2, boxShadow: '0 1px 4px rgba(0,0,0,0.05)', mb: 4, width: '100%' }}>
+        <Typography variant="h6" gutterBottom sx={{ mb: 4, fontWeight: 600, borderBottom: '2px solid #00b8a9', paddingBottom: '8px', width: '100%' }}>
+          Deal Information
+        </Typography>
+
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Deal Name *"
+              value={dealName}
+              onChange={(e) => setDealName(e.target.value)}
+              error={!!formErrors.dealName}
+              helperText={formErrors.dealName}
+              sx={{
+                width: '100%',
+                '& .MuiInputBase-root': {
+                  minWidth: '400px',
+                },
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  fontSize: '1rem',
+                  padding: '12px 14px'
+                },
+                '& .MuiInputLabel-root': {
+                  fontSize: '1rem'
+                }
+              }}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <FormControl fullWidth error={!!formErrors.status} sx={{ '& .MuiInputBase-root': { minWidth: '400px' } }}>
+              <InputLabel>Status *</InputLabel>
+              <Select
+                value={status}
+                label="Status *"
+                onChange={(e) => setStatus(e.target.value as DealStatus)}
+                MenuProps={{
+                  PaperProps: {
+                    sx: {
+                      width: '350px',
+                      maxHeight: '400px'
+                    }
+                  }
+                }}
+                sx={{
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#00b8a9',
+                  },
+                  '& .MuiSelect-select': {
+                    minWidth: '200px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }
+                }}
+              >
+                <MenuItem value={DealStatus.New}>New</MenuItem>
+                <MenuItem value={DealStatus.OnHold}>On Hold</MenuItem>
+                <MenuItem value={DealStatus.Cancelled}>Cancelled</MenuItem>
+                <MenuItem value={DealStatus.Won}>Won</MenuItem>
+                <MenuItem value={DealStatus.Lost}>Lost</MenuItem>
+                <MenuItem value={DealStatus.PartiallyPaid}>Partially Paid</MenuItem>
+                <MenuItem value={DealStatus.FullyPaid}>Fully Paid</MenuItem>
+              </Select>
+              {formErrors.status && <FormHelperText>{formErrors.status}</FormHelperText>}
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12}>
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DatePicker
+                label="Deal Date *"
+                value={dealDate}
+                onChange={(newValue) => setDealDate(newValue)}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    error: !!formErrors.dealDate,
+                    helperText: formErrors.dealDate,
+                    sx: {
+                      '& .MuiInputBase-root': {
+                        minWidth: '300px',
+                      },
+                      '& .MuiOutlinedInput-root': {
+                        '&:hover fieldset': {
+                          borderColor: '#00b8a9',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#00b8a9',
+                        },
+                      }
+                    }
+                  }
+                }}
+              />
+            </LocalizationProvider>
+          </Grid>
+
+          <Grid item xs={12}>
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DatePicker
+                label="Payment Due Date"
+                value={paymentDueDate}
+                onChange={(newValue) => setPaymentDueDate(newValue)}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    error: !!formErrors.paymentDueDate,
+                    helperText: formErrors.paymentDueDate,
+                    sx: {
+                      '& .MuiInputBase-root': {
+                        minWidth: '300px',
+                      },
+                      '& .MuiOutlinedInput-root': {
+                        '&:hover fieldset': {
+                          borderColor: '#00b8a9',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#00b8a9',
+                        },
+                      }
+                    }
+                  }
+                }}
+              />
+            </LocalizationProvider>
+          </Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Source *"
+              value={source}
+              onChange={(e) => setSource(e.target.value)}
+              error={!!formErrors.source}
+              helperText={formErrors.source}
+              sx={{
+                width: '100%',
+                '& .MuiInputBase-root': {
+                  minWidth: '300px',
+                },
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  fontSize: '1rem',
+                  padding: '12px 14px'
+                },
+                '& .MuiInputLabel-root': {
+                  fontSize: '1rem'
+                }
+              }}
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Recurring Frequency (Months)"
+              type="number"
+              value={recurringFrequencyMonths}
+              onChange={(e) => setRecurringFrequencyMonths(e.target.value === '' ? '' : Number(e.target.value))}
+              error={!!formErrors.recurringFrequencyMonths}
+              helperText={formErrors.recurringFrequencyMonths}
+              InputProps={{
+                inputProps: { min: 0, max: 60 }
+              }}
+              sx={{
+                width: '100%',
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  fontSize: '1rem',
+                  padding: '12px 14px'
+                },
+                '& .MuiInputLabel-root': {
+                  fontSize: '1rem'
+                }
+              }}
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <FormControl fullWidth sx={{ '& .MuiInputBase-root': { minWidth: '400px' } }}>
+              <InputLabel>Team</InputLabel>
+              <Select
+                value={teamId}
+                label="Team"
+                onChange={(e) => setTeamId(e.target.value)}
+                disabled={loadingTeams}
+                MenuProps={{
+                  PaperProps: {
+                    sx: {
+                      width: '350px',
+                      maxHeight: '400px'
+                    }
+                  }
+                }}
+                sx={{
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#00b8a9',
+                  },
+                  '& .MuiSelect-select': {
+                    minWidth: '200px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }
+                }}
+              >
+                <MenuItem value="">
+                  <em>None</em>
+                </MenuItem>
+                {teams.map((team) => (
+                  <MenuItem key={team.id} value={team.id}>
+                    {team.name}
+                  </MenuItem>
+                ))}
+              </Select>
+              {loadingTeams && (
+                <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                  <CircularProgress size={16} sx={{ mr: 1 }} />
+                  <Typography variant="caption">Loading teams...</Typography>
+                </Box>
+              )}
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12}>
+            <FormControl fullWidth sx={{ '& .MuiInputBase-root': { minWidth: '400px' } }}>
+              <InputLabel>Incentive Rule</InputLabel>
+              <Select
+                value={incentiveRuleId}
+                label="Incentive Rule"
+                onChange={(e) => setIncentiveRuleId(e.target.value)}
+                disabled={loadingIncentiveRules}
+                MenuProps={{
+                  PaperProps: {
+                    sx: {
+                      width: '350px',
+                      maxHeight: '400px'
+                    }
+                  }
+                }}
+                sx={{
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#00b8a9',
+                  },
+                  '& .MuiSelect-select': {
+                    minWidth: '200px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }
+                }}
+              >
+                <MenuItem value="">
+                  <em>None</em>
+                </MenuItem>
+                {incentiveRules.map((rule) => (
+                  <MenuItem key={rule.id} value={rule.id}>
+                    {rule.name}
+                  </MenuItem>
+                ))}
+              </Select>
+              {loadingIncentiveRules && (
+                <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                  <CircularProgress size={16} sx={{ mr: 1 }} />
+                  <Typography variant="caption">Loading incentive rules...</Typography>
+                </Box>
+              )}
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12}>
+            <Typography variant="h6" gutterBottom sx={{ mt: 5, mb: 3, fontWeight: 600, borderBottom: '2px solid #00b8a9', paddingBottom: '8px', width: '100%' }}>
+              Customer Information
+            </Typography>
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Customer Name *"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              error={!!formErrors.customerName}
+              helperText={formErrors.customerName}
+              sx={{
+                width: '100%',
+                '& .MuiInputBase-root': {
+                  minWidth: '300px',
+                },
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  fontSize: '1rem',
+                  padding: '12px 14px'
+                },
+                '& .MuiInputLabel-root': {
+                  fontSize: '1rem'
+                }
+              }}
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Customer Email"
+              type="email"
+              value={customerEmail}
+              onChange={(e) => setCustomerEmail(e.target.value)}
+              error={!!formErrors.customerEmail}
+              helperText={formErrors.customerEmail}
+              sx={{
+                width: '100%',
+                '& .MuiInputBase-root': {
+                  minWidth: '400px',
+                },
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  fontSize: '1rem',
+                  padding: '12px 14px'
+                },
+                '& .MuiInputLabel-root': {
+                  fontSize: '1rem'
+                }
+              }}
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Customer Phone"
+              value={customerPhone}
+              onChange={(e) => setCustomerPhone(e.target.value)}
+              error={!!formErrors.customerPhone}
+              helperText={formErrors.customerPhone}
+              sx={{
+                width: '100%',
+                '& .MuiInputBase-root': {
+                  minWidth: '400px',
+                },
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  fontSize: '1rem',
+                  padding: '12px 14px'
+                },
+                '& .MuiInputLabel-root': {
+                  fontSize: '1rem'
+                }
+              }}
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Customer Address"
+              multiline
+              rows={5}
+              value={customerAddress}
+              onChange={(e) => setCustomerAddress(e.target.value)}
+              sx={{
+                width: '100%',
+                '& .MuiInputBase-root': {
+                  minWidth: '400px',
+                },
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  fontSize: '1rem',
+                  padding: '12px 14px'
+                },
+                '& .MuiInputLabel-root': {
+                  fontSize: '1rem'
+                }
+              }}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <Typography variant="h6" gutterBottom sx={{ mt: 5, mb: 3, fontWeight: 600, borderBottom: '2px solid #00b8a9', paddingBottom: '8px', width: '100%' }}>
+              Financial Details
+            </Typography>
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Total Amount *"
+              type="number"
+              value={totalAmount}
+              onChange={(e) => setTotalAmount(e.target.value === '' ? '' : Number(e.target.value))}
+              error={!!formErrors.totalAmount}
+              helperText={formErrors.totalAmount}
+              InputProps={{
+                inputProps: { min: 0 }
+              }}
+              sx={{
+                width: '100%',
+                '& .MuiInputBase-root': {
+                  minWidth: '400px',
+                },
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  fontSize: '1rem',
+                  padding: '12px 14px'
+                },
+                '& .MuiInputLabel-root': {
+                  fontSize: '1rem'
+                }
+              }}
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <FormControl fullWidth error={!!formErrors.currencyType} sx={{ '& .MuiInputBase-root': { minWidth: '400px' } }}>
+              <InputLabel>Currency Type *</InputLabel>
+              <Select
+                value={currencyType}
+                label="Currency Type *"
+                onChange={(e) => setCurrencyType(e.target.value as CurrencyType)}
+                MenuProps={{
+                  PaperProps: {
+                    sx: {
+                      width: '350px',
+                      maxHeight: '400px'
+                    }
+                  }
+                }}
+                sx={{
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#00b8a9',
+                  },
+                  '& .MuiSelect-select': {
+                    minWidth: '200px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }
+                }}
+              >
+                <MenuItem value={CurrencyType.Rupees}>Rupees (₹)</MenuItem>
+                <MenuItem value={CurrencyType.Dollar}>Dollar ($)</MenuItem>
+              </Select>
+              {formErrors.currencyType && <FormHelperText>{formErrors.currencyType}</FormHelperText>}
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Tax Percentage (%)"
+              type="number"
+              value={taxPercentage}
+              onChange={(e) => setTaxPercentage(e.target.value === '' ? '' : Number(e.target.value))}
+              error={!!formErrors.taxPercentage}
+              helperText={formErrors.taxPercentage}
+              InputProps={{
+                inputProps: { min: 0, max: 100, step: 0.01 },
+                endAdornment: <InputAdornment position="end">%</InputAdornment>
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                }
+              }}
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Discount Amount"
+              type="number"
+              value={discountAmount}
+              onChange={(e) => setDiscountAmount(e.target.value === '' ? '' : Number(e.target.value))}
+              error={!!formErrors.discountAmount}
+              helperText={formErrors.discountAmount}
+              InputProps={{
+                inputProps: { min: 0 }
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                }
+              }}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <Typography variant="h6" gutterBottom sx={{ mt: 5, mb: 3, fontWeight: 600, borderBottom: '2px solid #00b8a9', paddingBottom: '8px', width: '100%' }}>
+              Referral Information
+            </Typography>
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Referral Name"
+              value={referralName}
+              onChange={(e) => setReferralName(e.target.value)}
+              error={!!formErrors.referralName}
+              helperText={formErrors.referralName}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                }
+              }}
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Referral Email"
+              type="email"
+              value={referralEmail}
+              onChange={(e) => setReferralEmail(e.target.value)}
+              error={!!formErrors.referralEmail}
+              helperText={formErrors.referralEmail}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                }
+              }}
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Referral Phone"
+              value={referralPhone}
+              onChange={(e) => setReferralPhone(e.target.value)}
+              error={!!formErrors.referralPhone}
+              helperText={formErrors.referralPhone}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                }
+              }}
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Referral Commission"
+              type="number"
+              value={referralCommission}
+              onChange={(e) => setReferralCommission(e.target.value === '' ? '' : Number(e.target.value))}
+              error={!!formErrors.referralCommission}
+              helperText={formErrors.referralCommission}
+              InputProps={{
+                inputProps: { min: 0 }
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                }
+              }}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <Typography variant="h6" gutterBottom sx={{ mt: 5, mb: 3, fontWeight: 600, borderBottom: '2px solid #00b8a9', paddingBottom: '8px', width: '100%' }}>
+              Additional Notes
+            </Typography>
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Notes"
+              multiline
+              rows={10}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              sx={{
+                width: '100%',
+                '& .MuiInputBase-root': {
+                  minWidth: '400px',
+                },
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#00b8a9',
+                  },
+                  fontSize: '1rem',
+                  padding: '12px 14px'
+                },
+                '& .MuiInputLabel-root': {
+                  fontSize: '1rem'
+                }
+              }}
+            />
+          </Grid>
+        </Grid>
+      </Paper>
+
+      {/* Action Buttons */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4, width: '100%' }}>
+        <Button variant="outlined" onClick={() => navigate('/deals')} fullWidth sx={{
+            mr: 2, width: '48%',
+            borderColor: '#00b8a9',
+            color: '#00b8a9',
+            padding: '10px 24px',
+            fontSize: '1rem',
+            '&:hover': {
+              borderColor: '#00a99d',
+              backgroundColor: 'rgba(0, 184, 169, 0.08)',
+            }
+          }}
+        >
+          Cancel
+        </Button>
+        <Button variant="contained" onClick={handleSubmit} disabled={loading} fullWidth sx={{
+            bgcolor: '#00b8a9',
+            padding: '10px 24px',
+            fontSize: '1rem',
+            width: '48%',
+            '&:hover': {
+              bgcolor: '#00a99d',
+            },
+            '&.Mui-disabled': {
+              bgcolor: 'rgba(0, 184, 169, 0.5)',
+            }
+          }}
+        >
+          {loading ? (
+            <CircularProgress size={24} color="inherit" />
+          ) : (
+            isEditMode ? 'Update Deal' : 'Create Deal'
+          )}
+        </Button>
+      </Box>
+    </Box>
+  );
+};
+
+export default DealForm;
+
+
+
+
+
+
+
+

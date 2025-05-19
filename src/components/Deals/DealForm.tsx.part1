@@ -1,0 +1,90 @@
+﻿import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  TextField,
+  Button,
+  Grid,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormHelperText,
+  CircularProgress,
+  Alert,
+  InputAdornment,
+  alpha,
+} from '@mui/material';
+import { useNavigate, useParams } from 'react-router-dom';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import dealService from '../../infrastructure/deals/DealServiceImpl';
+import teamService from '../../infrastructure/teams/TeamServiceImpl';
+import incentiveRuleService from '../../infrastructure/incentiveRules/IncentiveRuleServiceImpl';
+import { DealStatus, CurrencyType } from '../../core/models/deal';
+import type{ Team } from '../../core/models/incentivePlanTypes';
+import type { CreateDealRequest, UpdateDealRequest } from '../../core/models/deal';
+
+interface FormErrors {
+  dealName?: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  totalAmount?: string;
+  currencyType?: string;
+  taxPercentage?: string;
+  discountAmount?: string;
+  status?: string;
+  dealDate?: string;
+  paymentDueDate?: string;
+  source?: string;
+  referralName?: string;
+  referralEmail?: string;
+  referralPhone?: string;
+  referralCommission?: string;
+  recurringFrequencyMonths?: string;
+}
+
+const DealForm: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const isEditMode = !!id;
+
+  // Form state
+  const [dealName, setDealName] = useState('');
+  const [customerName, setCustomerName] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerAddress, setCustomerAddress] = useState('');
+  const [totalAmount, setTotalAmount] = useState<number | ''>('');
+  const [currencyType, setCurrencyType] = useState<CurrencyType>(CurrencyType.Rupees);
+  const [taxPercentage, setTaxPercentage] = useState<number | ''>(0);
+  const [discountAmount, setDiscountAmount] = useState<number | ''>(0);
+  const [status, setStatus] = useState<DealStatus>(DealStatus.New);
+  const [dealDate, setDealDate] = useState<Date | null>(new Date());
+  const [paymentDueDate, setPaymentDueDate] = useState<Date | null>(null);
+  const [source, setSource] = useState('');
+  const [notes, setNotes] = useState('');
+  const [referralName, setReferralName] = useState('');
+  const [referralEmail, setReferralEmail] = useState('');
+  const [referralPhone, setReferralPhone] = useState('');
+  const [referralCommission, setReferralCommission] = useState<number | ''>('');
+  const [isReferralCommissionPaid, setIsReferralCommissionPaid] = useState(false);
+  const [recurringFrequencyMonths, setRecurringFrequencyMonths] = useState<number | ''>('');
+  const [teamId, setTeamId] = useState<string | ''>('');
+  const [incentiveRuleId, setIncentiveRuleId] = useState<string | ''>('');
+
+  // Data state
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [incentiveRules, setIncentiveRules] = useState<any[]>([]);
+  const [loadingTeams, setLoadingTeams] = useState(false);
+  const [loadingIncentiveRules, setLoadingIncentiveRules] = useState(false);
+
+  // UI state
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [formErrors, setFormErrors] = useState<FormErrors>({});

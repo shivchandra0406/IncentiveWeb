@@ -242,7 +242,6 @@ export const payoutStatusToNumeric: Record<PayoutStatus, number> = {
 // Utility functions for mapping
 export function mapNumericToEnum<T>(value: number | string | T, mapper: Record<number, T>): T {
   if (typeof value === 'number') {
-    debugger
     return mapper[value] || Object.values(mapper)[0]; // Return first enum value as fallback
   }
 
@@ -297,15 +296,6 @@ export function getRewardTypeFromNumeric(value: number | string | RewardType): R
 }
 
 export function getDealStatusFromNumeric(value: number | string | DealStatus): DealStatus {
-  // Debug the conversion process
-  console.log('Deal Status Debug:', {
-    originalValue: value,
-    valueType: typeof value,
-    numericValue: typeof value === 'number' ? value : Number(value),
-    mappedValue: mapNumericToEnum(value, numericToDealStatus),
-    allStatusValues: numericToDealStatus
-  });
-  
   return mapNumericToEnum(value, numericToDealStatus);
 }
 

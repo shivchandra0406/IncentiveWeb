@@ -134,6 +134,23 @@ export interface Project {
   id: string;
   name: string;
   description: string;
+  location?: string;
+  propertyType?: string;
+  price?: number;
+  area?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  dateListed?: string;
+  status?: string;
+  agentName?: string;
+  agentContact?: string;
+  imagesMedia?: string;
+  amenities?: string;
+  yearBuilt?: number;
+  ownershipDetails?: string;
+  listingExpiryDate?: string;
+  mlsListingId?: string;
+  totalValue?: number;
   isActive: boolean;
 }
 
