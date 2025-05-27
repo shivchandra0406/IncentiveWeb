@@ -117,6 +117,7 @@ export interface KickerIncentivePlan extends IncentivePlanBase {
   awardValue?: number;
   currencyType: CurrencyType;
   giftDescription?: string;
+  location?: string;
 }
 
 // Tiered-Based Incentive Plan
