@@ -1,0 +1,504 @@
+﻿  // Render the form
+  return (
+    <Box sx={{ maxWidth: '1200px', mx: 'auto', p: 3 }}>
+      <Typography variant="h5" sx={{ 
+        mb: 4, 
+        fontWeight: 600, 
+        color: '#00b8a9', 
+        borderBottom: '3px solid #00b8a9', 
+        paddingBottom: '8px',
+        width: '100%'
+      }}>
+        {isEditMode ? 'Edit Deal' : 'Create New Deal'}
+      </Typography>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+
+      {success && (
+        <Alert severity="success" sx={{ mb: 3 }}>
+          {success}
+        </Alert>
+      )}
+
+      {loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}>
+          <CircularProgress />
+        </Box>
+      )}
+
+      {/* Deal Information Card */}
+      <Card sx={{ mb: 4, boxShadow: '0 4px 8px rgba(0,0,0,0.1)', borderRadius: '8px', overflow: 'visible' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Typography variant="h6" sx={{ 
+            mb: 4, 
+            fontWeight: 600, 
+            borderBottom: '2px solid #00b8a9', 
+            paddingBottom: '8px',
+            width: '100%'
+          }}>
+            Deal Information
+          </Typography>
+          
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={4}>
+              <TextField
+                label="Deal Name"
+                value={dealName}
+                onChange={(e) => setDealName(e.target.value)}
+                fullWidth
+                required
+                error={!!formErrors.dealName}
+                helperText={formErrors.dealName}
+                disabled={loading}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <FormControl fullWidth required error={!!formErrors.status}>
+                <InputLabel>Status</InputLabel>
+                <Select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as DealStatus)}
+                  label="Status"
+                  disabled={loading}
+                >
+                  {Object.values(DealStatus).map((status) => (
+                    <MenuItem key={status} value={status}>
+                      {status}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {formErrors.status && <FormHelperText>{formErrors.status}</FormHelperText>}
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DatePicker
+                  label="Deal Date"
+                  value={dealDate}
+                  onChange={(date) => setDealDate(date)}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      required: true,
+                      error: !!formErrors.dealDate,
+                      helperText: formErrors.dealDate,
+                      disabled: loading
+                    }
+                  }}
+                />
+              </LocalizationProvider>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <DatePicker
+                  label="Payment Due Date"
+                  value={paymentDueDate}
+                  onChange={(date) => setPaymentDueDate(date)}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      error: !!formErrors.paymentDueDate,
+                      helperText: formErrors.paymentDueDate,
+                      disabled: loading
+                    }
+                  }}
+                />
+              </LocalizationProvider>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                label="Source"
+                value={source}
+                onChange={(e) => setSource(e.target.value)}
+                fullWidth
+                required
+                error={!!formErrors.source}
+                helperText={formErrors.source}
+                disabled={loading}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                label="Recurring Frequency (Months)"
+                type="number"
+                value={recurringFrequencyMonths}
+                onChange={(e) => setRecurringFrequencyMonths(e.target.value === '' ? '' : Number(e.target.value))}
+                fullWidth
+                error={!!formErrors.recurringFrequencyMonths}
+                helperText={formErrors.recurringFrequencyMonths}
+                disabled={loading}
+                InputProps={{
+                  inputProps: { min: 0, max: 60 }
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth disabled={loadingTeams || loading}>
+                <InputLabel>Team</InputLabel>
+                <Select
+                  value={teamId}
+                  onChange={(e) => setTeamId(e.target.value as string)}
+                  label="Team"
+                >
+                  <MenuItem value="">
+                    <em>None</em>
+                  </MenuItem>
+                  {teams.map((team) => (
+                    <MenuItem key={team.id} value={team.id}>
+                      {team.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth disabled={loadingIncentiveRules || loading}>
+                <InputLabel>Incentive Plan</InputLabel>
+                <Select
+                  value={incentiveRuleId}
+                  onChange={(e) => setIncentiveRuleId(e.target.value as string)}
+                  label="Incentive Plan"
+                >
+                  <MenuItem value="">
+                    <em>None</em>
+                  </MenuItem>
+                  {incentiveRules.map((rule) => (
+                    <MenuItem key={rule.id} value={rule.id}>
+                      {rule.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+
+      {/* Customer Information Card */}
+      <Card sx={{ mb: 4, boxShadow: '0 4px 8px rgba(0,0,0,0.1)', borderRadius: '8px', overflow: 'visible' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ 
+            width: '100%', 
+            borderBottom: '2px solid #00b8a9', 
+            mb: 4, 
+            pb: 1 
+          }}>
+            <Typography variant="h6" sx={{ 
+              fontWeight: 600, 
+              color: '#333',
+              width: '100%'
+            }}>
+              Customer Information
+            </Typography>
+          </Box>
+          
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Customer Name"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                fullWidth
+                required
+                error={!!formErrors.customerName}
+                helperText={formErrors.customerName}
+                disabled={loading}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Customer Email"
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+                fullWidth
+                error={!!formErrors.customerEmail}
+                helperText={formErrors.customerEmail}
+                disabled={loading}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Customer Phone"
+                value={customerPhone}
+                onChange={(e) => setCustomerPhone(e.target.value)}
+                fullWidth
+                error={!!formErrors.customerPhone}
+                helperText={formErrors.customerPhone}
+                disabled={loading}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Customer Address"
+                value={customerAddress}
+                onChange={(e) => setCustomerAddress(e.target.value)}
+                fullWidth
+                multiline
+                rows={2}
+                disabled={loading}
+              />
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+
+      {/* Financial Details Card */}
+      <Card sx={{ mb: 4, boxShadow: '0 4px 8px rgba(0,0,0,0.1)', borderRadius: '8px', overflow: 'visible' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ 
+            width: '100%', 
+            borderBottom: '2px solid #00b8a9', 
+            mb: 4, 
+            pb: 1 
+          }}>
+            <Typography variant="h6" sx={{ 
+              fontWeight: 600, 
+              color: '#333',
+              width: '100%'
+            }}>
+              Financial Details
+            </Typography>
+          </Box>
+          
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={4}>
+              <TextField
+                label="Total Amount"
+                type="number"
+                value={totalAmount}
+                onChange={(e) => setTotalAmount(e.target.value === '' ? '' : Number(e.target.value))}
+                fullWidth
+                required
+                error={!!formErrors.totalAmount}
+                helperText={formErrors.totalAmount}
+                disabled={loading}
+                InputProps={{
+                  inputProps: { min: 0 },
+                  startAdornment: currencyType === CurrencyType.Rupees ? (
+                    <InputAdornment position="start">₹</InputAdornment>
+                  ) : currencyType === CurrencyType.Dollars ? (
+                    <InputAdornment position="start">$</InputAdornment>
+                  ) : (
+                    <InputAdornment position="start"></InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <FormControl fullWidth required error={!!formErrors.currencyType}>
+                <InputLabel>Currency Type</InputLabel>
+                <Select
+                  value={currencyType}
+                  onChange={(e) => setCurrencyType(e.target.value as CurrencyType)}
+                  label="Currency Type"
+                  disabled={loading}
+                >
+                  {Object.values(CurrencyType).map((type) => (
+                    <MenuItem key={type} value={type}>
+                      {type}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {formErrors.currencyType && <FormHelperText>{formErrors.currencyType}</FormHelperText>}
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                label="Tax Percentage (%)"
+                type="number"
+                value={taxPercentage}
+                onChange={(e) => setTaxPercentage(e.target.value === '' ? '' : Number(e.target.value))}
+                fullWidth
+                required
+                error={!!formErrors.taxPercentage}
+                helperText={formErrors.taxPercentage}
+                disabled={loading}
+                InputProps={{
+                  inputProps: { min: 0, max: 100 },
+                  endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                label="Discount Amount"
+                type="number"
+                value={discountAmount}
+                onChange={(e) => setDiscountAmount(e.target.value === '' ? '' : Number(e.target.value))}
+                fullWidth
+                required
+                error={!!formErrors.discountAmount}
+                helperText={formErrors.discountAmount}
+                disabled={loading}
+                InputProps={{
+                  inputProps: { min: 0 },
+                  startAdornment: currencyType === CurrencyType.Rupees ? (
+                    <InputAdornment position="start">₹</InputAdornment>
+                  ) : currencyType === CurrencyType.Dollars ? (
+                    <InputAdornment position="start">$</InputAdornment>
+                  ) : (
+                    <InputAdornment position="start"></InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+
+      {/* Referral Information Card */}
+      <Card sx={{ mb: 4, boxShadow: '0 4px 8px rgba(0,0,0,0.1)', borderRadius: '8px', overflow: 'visible' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ 
+            width: '100%', 
+            borderBottom: '2px solid #00b8a9', 
+            mb: 4, 
+            pb: 1 
+          }}>
+            <Typography variant="h6" sx={{ 
+              fontWeight: 600, 
+              color: '#333',
+              width: '100%'
+            }}>
+              Referral Information
+            </Typography>
+          </Box>
+          
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Referral Name"
+                value={referralName}
+                onChange={(e) => setReferralName(e.target.value)}
+                fullWidth
+                error={!!formErrors.referralName}
+                helperText={formErrors.referralName}
+                disabled={loading}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Referral Email"
+                value={referralEmail}
+                onChange={(e) => setReferralEmail(e.target.value)}
+                fullWidth
+                error={!!formErrors.referralEmail}
+                helperText={formErrors.referralEmail}
+                disabled={loading}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Referral Phone"
+                value={referralPhone}
+                onChange={(e) => setReferralPhone(e.target.value)}
+                fullWidth
+                error={!!formErrors.referralPhone}
+                helperText={formErrors.referralPhone}
+                disabled={loading}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Referral Commission"
+                type="number"
+                value={referralCommission}
+                onChange={(e) => setReferralCommission(e.target.value === '' ? '' : Number(e.target.value))}
+                fullWidth
+                error={!!formErrors.referralCommission}
+                helperText={formErrors.referralCommission}
+                disabled={loading}
+                InputProps={{
+                  inputProps: { min: 0 },
+                  startAdornment: currencyType === CurrencyType.Rupees ? (
+                    <InputAdornment position="start">₹</InputAdornment>
+                  ) : currencyType === CurrencyType.Dollars ? (
+                    <InputAdornment position="start">$</InputAdornment>
+                  ) : (
+                    <InputAdornment position="start"></InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+
+      {/* Notes Card */}
+      <Card sx={{ mb: 4, boxShadow: '0 4px 8px rgba(0,0,0,0.1)', borderRadius: '8px', overflow: 'visible' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ 
+            width: '100%', 
+            borderBottom: '2px solid #00b8a9', 
+            mb: 4, 
+            pb: 1 
+          }}>
+            <Typography variant="h6" sx={{ 
+              fontWeight: 600, 
+              color: '#333',
+              width: '100%'
+            }}>
+              Additional Notes
+            </Typography>
+          </Box>
+          
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <TextField
+                label="Notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                fullWidth
+                multiline
+                rows={4}
+                disabled={loading}
+              />
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+
+      {/* Action Buttons */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4, width: '100%' }}>
+        <Button 
+          variant="outlined" 
+          onClick={() => navigate('/deals')} 
+          sx={{ 
+            width: '48%', 
+            color: '#00b8a9', 
+            borderColor: '#00b8a9', 
+            py: 1.5,
+            '&:hover': {
+              borderColor: alpha('#00b8a9', 0.8),
+              bgcolor: alpha('#00b8a9', 0.1),
+            }
+          }}
+          disabled={loading}
+        >
+          Cancel
+        </Button>
+        <Button 
+          variant="contained" 
+          onClick={handleSubmit} 
+          sx={{ 
+            width: '48%', 
+            bgcolor: '#00b8a9', 
+            py: 1.5,
+            '&:hover': {
+              bgcolor: alpha('#00b8a9', 0.8),
+            }
+          }}
+          disabled={loading}
+        >
+          {isEditMode ? 'Update Deal' : 'Create Deal'}
+        </Button>
+      </Box>
+    </Box>
+  );
+};
+
+export default DealForm;

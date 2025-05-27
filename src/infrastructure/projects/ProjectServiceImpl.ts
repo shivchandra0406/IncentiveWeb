@@ -64,20 +64,20 @@ export interface CreateProjectResponse {
 class ProjectServiceImpl implements ProjectService {
   async getProjects(): Promise<Project[]> {
     try {
-      // Use the minimal API endpoint for dropdown lists
-      console.log('Fetching projects from /api/Project/minimal');
-      const response = await enhancedApiClient.get<{ succeeded: boolean, message: string, data: Project[] }>('/api/Project/minimal');
+      // Use the main API endpoint for projects list
+      console.log('Fetching projects from https://localhost:44307/api/Project');
+      const response = await enhancedApiClient.get<{ succeeded: boolean, message: string, errors: string[], data: Project[] }>('https://localhost:44307/api/Project');
       console.log('Projects response:', response.data);
-      return response.data.data;
+      return response.data.data || [];
     } catch (error: any) {
       console.error('Error fetching projects:', error);
 
       // If the first endpoint fails, try the alternative endpoint
       try {
-        console.log('Retrying with alternative endpoint: /Project/minimal');
-        const response = await enhancedApiClient.get<{ succeeded: boolean, message: string, data: Project[] }>('/Project/minimal');
+        console.log('Retrying with alternative endpoint: https://localhost:44307/api/Project');
+        const response = await enhancedApiClient.get<{ succeeded: boolean, message: string, errors: string[], data: Project[] }>('https://localhost:44307/api/Project');
         console.log('Projects response from alternative endpoint:', response.data);
-        return response.data.data;
+        return response.data.data || [];
       } catch (retryError: any) {
         console.error('Error fetching projects from alternative endpoint:', retryError);
         return [];
@@ -89,7 +89,7 @@ class ProjectServiceImpl implements ProjectService {
     try {
       // Use the detailed API endpoint for getting a specific project
       console.log(`Fetching project details for ID: ${id}`);
-      const response = await enhancedApiClient.get<{ succeeded: boolean, message: string, data: Project }>(`/api/Project/${id}`);
+      const response = await enhancedApiClient.get<{ succeeded: boolean, message: string, data: Project }>(`https://localhost:44307/api/Project/${id}`);
       console.log('Project details response:', response.data);
       return response.data.data;
     } catch (error: any) {
@@ -97,8 +97,8 @@ class ProjectServiceImpl implements ProjectService {
 
       // If the first endpoint fails, try the alternative endpoint
       try {
-        console.log(`Retrying with alternative endpoint: /Project/${id}`);
-        const response = await enhancedApiClient.get<{ succeeded: boolean, message: string, data: Project }>(`/Project/${id}`);
+        console.log(`Retrying with alternative endpoint: https://localhost:44307/api/Project/${id}`);
+        const response = await enhancedApiClient.get<{ succeeded: boolean, message: string, data: Project }>(`https://localhost:44307/api/Project/${id}`);
         console.log('Project details response from alternative endpoint:', response.data);
         return response.data.data;
       } catch (retryError: any) {
@@ -111,7 +111,7 @@ class ProjectServiceImpl implements ProjectService {
   async createProject(projectData: CreateProjectRequest): Promise<CreateProjectResponse> {
     try {
       console.log('Creating new project with data:', projectData);
-      const response = await enhancedApiClient.post<CreateProjectResponse>('/api/Project', projectData);
+      const response = await enhancedApiClient.post<CreateProjectResponse>('https://localhost:44307/api/Project', projectData);
       console.log('Create project response:', response.data);
       return response.data;
     } catch (error: any) {
@@ -120,8 +120,8 @@ class ProjectServiceImpl implements ProjectService {
 
       // If the first endpoint fails, try the alternative endpoint
       try {
-        console.log('Retrying with alternative endpoint: /Project');
-        const response = await enhancedApiClient.post<CreateProjectResponse>('/Project', projectData);
+        console.log('Retrying with alternative endpoint: https://localhost:44307/api/Project');
+        const response = await enhancedApiClient.post<CreateProjectResponse>('https://localhost:44307/api/Project', projectData);
         console.log('Create project response from alternative endpoint:', response.data);
         return response.data;
       } catch (retryError: any) {
@@ -139,7 +139,7 @@ class ProjectServiceImpl implements ProjectService {
   async updateProject(id: string, projectData: UpdateProjectRequest): Promise<CreateProjectResponse> {
     try {
       console.log(`Updating project with ID ${id}:`, projectData);
-      const response = await enhancedApiClient.put<CreateProjectResponse>(`/api/Project/${id}`, projectData);
+      const response = await enhancedApiClient.put<CreateProjectResponse>(`https://localhost:44307/api/Project/${id}`, projectData);
       console.log('Update project response:', response.data);
       return response.data;
     } catch (error: any) {
@@ -148,8 +148,8 @@ class ProjectServiceImpl implements ProjectService {
 
       // If the first endpoint fails, try the alternative endpoint
       try {
-        console.log(`Retrying with alternative endpoint: /Project/${id}`);
-        const response = await enhancedApiClient.put<CreateProjectResponse>(`/Project/${id}`, projectData);
+        console.log(`Retrying with alternative endpoint: https://localhost:44307/api/Project/${id}`);
+        const response = await enhancedApiClient.put<CreateProjectResponse>(`https://localhost:44307/api/Project/${id}`, projectData);
         console.log('Update project response from alternative endpoint:', response.data);
         return response.data;
       } catch (retryError: any) {
@@ -167,7 +167,7 @@ class ProjectServiceImpl implements ProjectService {
   async deleteProject(id: string): Promise<CreateProjectResponse> {
     try {
       console.log(`Deleting project with ID ${id}`);
-      const response = await enhancedApiClient.delete<CreateProjectResponse>(`/api/Project/${id}`);
+      const response = await enhancedApiClient.delete<CreateProjectResponse>(`https://localhost:44307/api/Project/${id}`);
       console.log('Delete project response:', response.data);
       return response.data;
     } catch (error: any) {
@@ -176,8 +176,8 @@ class ProjectServiceImpl implements ProjectService {
 
       // If the first endpoint fails, try the alternative endpoint
       try {
-        console.log(`Retrying with alternative endpoint: /Project/${id}`);
-        const response = await enhancedApiClient.delete<CreateProjectResponse>(`/Project/${id}`);
+        console.log(`Retrying with alternative endpoint: https://localhost:44307/api/Project/${id}`);
+        const response = await enhancedApiClient.delete<CreateProjectResponse>(`https://localhost:44307/api/Project/${id}`);
         console.log('Delete project response from alternative endpoint:', response.data);
         return response.data;
       } catch (retryError: any) {

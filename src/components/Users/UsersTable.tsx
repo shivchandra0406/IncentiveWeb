@@ -369,7 +369,7 @@ const UsersTable: React.FC = () => {
                         <TableCell component="th" scope="row">
                           {user.firstName} {user.lastName}
                         </TableCell>
-                        <TableCell>{user.username}</TableCell>
+                        <TableCell>{user.userName}</TableCell>
                         <TableCell>{user.email}</TableCell>
                         <TableCell>
                           {user.roles.map((role) => (

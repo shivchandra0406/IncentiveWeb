@@ -296,15 +296,6 @@ export function getRewardTypeFromNumeric(value: number | string | RewardType): R
 }
 
 export function getDealStatusFromNumeric(value: number | string | DealStatus): DealStatus {
-  // Debug the conversion process
-  console.log('Deal Status Debug:', {
-    originalValue: value,
-    valueType: typeof value,
-    numericValue: typeof value === 'number' ? value : Number(value),
-    mappedValue: mapNumericToEnum(value, numericToDealStatus),
-    allStatusValues: numericToDealStatus
-  });
-
   return mapNumericToEnum(value, numericToDealStatus);
 }
 
@@ -330,61 +321,4 @@ export function getWorkflowStepExecutionStatusFromNumeric(value: number | string
 
 export function getPayoutStatusFromNumeric(value: number | string | PayoutStatus): PayoutStatus {
   return mapNumericToEnum(value, numericToPayoutStatus);
-}
-
-// Function to convert enum string values to numeric values for API requests
-export function convertEnumValuesToNumeric<T extends Record<string, any>>(data: T): T {
-  const result = { ...data };
-
-  // Map of property names to their corresponding mapper functions
-  const propertyMappers: Record<string, Record<string, number>> = {
-    planType: incentivePlanTypeToNumeric,
-    periodType: periodTypeToNumeric,
-    metricType: metricTypeToNumeric,
-    targetType: targetTypeToNumeric,
-    calculationType: incentiveCalculationTypeToNumeric,
-    awardType: awardTypeToNumeric,
-    currencyType: currencyTypeToNumeric,
-    status: dealStatusToNumeric
-  };
-
-  // Direct mapping for currency strings to numeric values
-  const currencyStringToNumeric: Record<string, number> = {
-    'Rupees': 0,
-    'Dollar': 1
-  };
-
-  // Process each property in the data object
-  for (const [key, value] of Object.entries(result)) {
-    // Special handling for currencyType
-    if (key === 'currencyType' && typeof value === 'string') {
-      if (value in currencyStringToNumeric) {
-        (result as any)[key] = currencyStringToNumeric[value];
-      }
-      continue;
-    }
-
-    // If the property has a mapper and the value is a string
-    if (propertyMappers[key] && typeof value === 'string') {
-      // Get the mapper for this property
-      const mapper = propertyMappers[key];
-
-      // If the value exists in the mapper, replace it with the numeric value
-      if (value in mapper) {
-        (result as any)[key] = mapper[value as any];
-      }
-    }
-    // If the value is an array, process each item in the array
-    else if (Array.isArray(value)) {
-      (result as any)[key] = value.map(item =>
-        typeof item === 'object' ? convertEnumValuesToNumeric(item) : item
-      );
-    }
-    // If the value is an object, recursively process it
-    else if (value && typeof value === 'object') {
-      (result as any)[key] = convertEnumValuesToNumeric(value);
-    }
-  }
-
-  return result;
 }

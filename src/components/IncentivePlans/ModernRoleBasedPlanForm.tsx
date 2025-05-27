@@ -25,7 +25,6 @@ import {
   Autocomplete
 } from '@mui/material';
 import {
-  Info as InfoIcon,
   Help as HelpIcon
 } from '@mui/icons-material';
 import incentivePlanService from '../../infrastructure/incentivePlans/IncentivePlanServiceImpl';
@@ -53,17 +52,23 @@ const ModernRoleBasedPlanForm: React.FC<ModernRoleBasedPlanFormProps> = ({ initi
   // Form state
   const [planName, setPlanName] = useState('');
   const [periodType, setPeriodType] = useState<PeriodType>(PeriodType.Monthly);
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const [isActive, setIsActive] = useState(true);
   const [role, setRole] = useState('');
   const [isTeamBased, setIsTeamBased] = useState(false);
   const [teamId, setTeamId] = useState('');
   const [targetType, setTargetType] = useState<TargetType>(TargetType.MetricBased);
+  const [salary, setSalary] = useState<number | ''>('');
+  const [metricType, setMetricType] = useState<MetricType>(MetricType.BookingValue);
+  const [targetValue, setTargetValue] = useState<number | ''>('');
   const [calculationType, setCalculationType] = useState<IncentiveCalculationType>(IncentiveCalculationType.FixedAmount);
   const [incentiveValue, setIncentiveValue] = useState<number | ''>('');
   const [currencyType, setCurrencyType] = useState<CurrencyType>(CurrencyType.Rupees);
-  const [isCumulative, setIsCumulative] = useState(false);
   const [incentiveAfterExceedingTarget, setIncentiveAfterExceedingTarget] = useState(false);
   const [includeSalaryInTarget, setIncludeSalaryInTarget] = useState(false);
+  const [provideAdditionalIncentiveOnExceeding, setProvideAdditionalIncentiveOnExceeding] = useState(false);
+  const [additionalIncentivePercentage, setAdditionalIncentivePercentage] = useState<number | ''>('');
 
   // UI state
   const [loading, setLoading] = useState(false);
@@ -128,12 +133,24 @@ const ModernRoleBasedPlanForm: React.FC<ModernRoleBasedPlanFormProps> = ({ initi
     setIsTeamBased(data.isTeamBased !== undefined ? data.isTeamBased : false);
     setTeamId(data.teamId || '');
     setTargetType(data.targetType || TargetType.MetricBased);
+    setSalary(data.salaryPercentage !== undefined ? data.salaryPercentage : '');
+    setMetricType(data.metricType || MetricType.BookingValue);
+    setTargetValue(data.targetValue !== undefined ? data.targetValue : '');
     setCalculationType(data.calculationType || IncentiveCalculationType.FixedAmount);
     setIncentiveValue(data.incentiveValue !== undefined ? data.incentiveValue : '');
     setCurrencyType(data.currencyType || CurrencyType.Rupees);
-    setIsCumulative(data.isCumulative !== undefined ? data.isCumulative : false);
     setIncentiveAfterExceedingTarget(data.incentiveAfterExceedingTarget !== undefined ? data.incentiveAfterExceedingTarget : false);
     setIncludeSalaryInTarget(data.includeSalaryInTarget !== undefined ? data.includeSalaryInTarget : false);
+    setProvideAdditionalIncentiveOnExceeding(data.provideAdditionalIncentiveOnExceeding || false);
+    setAdditionalIncentivePercentage(data.additionalIncentivePercentage !== undefined ? data.additionalIncentivePercentage : '');
+
+    if (data.startDate) {
+      setStartDate(new Date(data.startDate));
+    }
+
+    if (data.endDate) {
+      setEndDate(new Date(data.endDate));
+    }
   };
 
   const validateForm = (): boolean => {
@@ -151,6 +168,16 @@ const ModernRoleBasedPlanForm: React.FC<ModernRoleBasedPlanFormProps> = ({ initi
       errors.teamId = 'Team is required when team-based is selected';
     }
 
+    if (targetType === TargetType.SalaryBased && salary === '') {
+      errors.salary = 'Salary factor is required for salary-based targets';
+    }
+
+    if (targetValue === '') {
+      errors.targetValue = 'Target value is required';
+    } else if (typeof targetValue === 'number' && targetValue <= 0) {
+      errors.targetValue = 'Target value must be greater than 0';
+    }
+
     if (incentiveValue === '') {
       errors.incentiveValue = 'Incentive value is required';
     } else if (typeof incentiveValue === 'number' && incentiveValue <= 0) {
@@ -160,6 +187,22 @@ const ModernRoleBasedPlanForm: React.FC<ModernRoleBasedPlanFormProps> = ({ initi
     if (calculationType === IncentiveCalculationType.PercentageOnTarget &&
         typeof incentiveValue === 'number' && incentiveValue > 100) {
       errors.incentiveValue = 'Percentage cannot exceed 100%';
+    }
+
+    if (periodType === PeriodType.Custom) {
+      if (!startDate) {
+        errors.startDate = 'Start date is required for custom period';
+      }
+
+      if (!endDate) {
+        errors.endDate = 'End date is required for custom period';
+      } else if (startDate && endDate && endDate < startDate) {
+        errors.endDate = 'End date must be after start date';
+      }
+    }
+
+    if (provideAdditionalIncentiveOnExceeding && (!additionalIncentivePercentage && additionalIncentivePercentage !== 0)) {
+      errors.additionalIncentivePercentage = 'Please specify the percentage of incentive to be given on the exceeded amount';
     }
 
     setFormErrors(errors);
@@ -179,21 +222,28 @@ const ModernRoleBasedPlanForm: React.FC<ModernRoleBasedPlanFormProps> = ({ initi
       const planData: CreateRoleBasedIncentivePlanRequest = {
         planName,
         periodType,
+        startDate: periodType === PeriodType.Custom && startDate ? startDate.toISOString() : undefined,
+        endDate: periodType === PeriodType.Custom && endDate ? endDate.toISOString() : undefined,
         isActive,
         role,
         isTeamBased,
         teamId: isTeamBased ? teamId : undefined,
         targetType,
+        salaryPercentage: targetType === TargetType.SalaryBased && salary !== '' ? Number(salary) : undefined,
+        metricType,
+        targetValue: targetValue as number,
         calculationType,
         incentiveValue: incentiveValue as number,
         currencyType,
-        isCumulative,
+        isCumulative: false, // Setting to false as per requirement
         incentiveAfterExceedingTarget,
         includeSalaryInTarget,
+        provideAdditionalIncentiveOnExceeding,
+        additionalIncentivePercentage: provideAdditionalIncentiveOnExceeding && additionalIncentivePercentage !== ''
+          ? Number(additionalIncentivePercentage)
+          : undefined,
         // Add required fields for the API
-        planType: IncentivePlanType.RoleBased,
-        metricType: MetricType.BookingValue,
-        targetValue: 0
+        planType: IncentivePlanType.RoleBased
       };
 
       let response;
@@ -321,6 +371,58 @@ const ModernRoleBasedPlanForm: React.FC<ModernRoleBasedPlanFormProps> = ({ initi
                 </Select>
                 {formErrors.periodType && <FormHelperText>{formErrors.periodType}</FormHelperText>}
               </FormControl>
+
+              {periodType === PeriodType.Custom && (
+                <>
+                  <TextField
+                    fullWidth
+                    label="Start Date *"
+                    type="date"
+                    value={startDate ? startDate.toISOString().split('T')[0] : ''}
+                    onChange={(e) => {
+                      const date = e.target.value ? new Date(e.target.value) : null;
+                      setStartDate(date);
+                    }}
+                    error={!!formErrors.startDate}
+                    helperText={formErrors.startDate}
+                    InputLabelProps={{ shrink: true }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        '&:hover fieldset': {
+                          borderColor: '#00b8a9',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#00b8a9',
+                        },
+                      }
+                    }}
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="End Date *"
+                    type="date"
+                    value={endDate ? endDate.toISOString().split('T')[0] : ''}
+                    onChange={(e) => {
+                      const date = e.target.value ? new Date(e.target.value) : null;
+                      setEndDate(date);
+                    }}
+                    error={!!formErrors.endDate}
+                    helperText={formErrors.endDate}
+                    InputLabelProps={{ shrink: true }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        '&:hover fieldset': {
+                          borderColor: '#00b8a9',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#00b8a9',
+                        },
+                      }
+                    }}
+                  />
+                </>
+              )}
 
               <FormControlLabel
                 control={
@@ -529,6 +631,76 @@ const ModernRoleBasedPlanForm: React.FC<ModernRoleBasedPlanFormProps> = ({ initi
                 </Box>
               </Box>
 
+              {targetType === TargetType.SalaryBased && (
+                <TextField
+                  fullWidth
+                  label="Salary Factor *"
+                  type="number"
+                  value={salary}
+                  onChange={(e) => setSalary(e.target.value === '' ? '' : Number(e.target.value))}
+                  error={!!formErrors.salary}
+                  helperText={formErrors.salary || 'Enter decimal value of salary to be used for calculation (e.g., 0.5 for half salary)'}
+                  // Using min attribute directly on the input
+                  // inputProps is deprecated but still works
+                  inputProps={{ min: 0, max: 10, step: 0.01 }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': {
+                        borderColor: '#00b8a9',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#00b8a9',
+                      },
+                    }
+                  }}
+                />
+              )}
+
+              <FormControl fullWidth error={!!formErrors.metricType}>
+                <InputLabel>Metric Type *</InputLabel>
+                <Select
+                  value={metricType}
+                  label="Metric Type *"
+                  onChange={(e) => setMetricType(e.target.value as MetricType)}
+                  sx={{
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#00b8a9',
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#00b8a9',
+                    },
+                  }}
+                >
+                  <MenuItem value={MetricType.BookingValue}>Booking Value</MenuItem>
+                  <MenuItem value={MetricType.UnitsSold}>Units Sold</MenuItem>
+                  <MenuItem value={MetricType.Revenue}>Revenue</MenuItem>
+                </Select>
+                {formErrors.metricType && <FormHelperText>{formErrors.metricType}</FormHelperText>}
+              </FormControl>
+
+              <TextField
+                fullWidth
+                label="Target Value *"
+                type="number"
+                value={targetValue}
+                onChange={(e) => setTargetValue(e.target.value === '' ? '' : Number(e.target.value))}
+                error={!!formErrors.targetValue}
+                helperText={formErrors.targetValue || 'Enter the target value to be achieved'}
+                // Using min attribute directly on the input
+                // inputProps is deprecated but still works
+                inputProps={{ min: 0 }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: '#00b8a9',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#00b8a9',
+                    },
+                  }
+                }}
+              />
+
               <FormControl fullWidth error={!!formErrors.calculationType}>
                 <InputLabel>Calculation Type *</InputLabel>
                 <Select
@@ -550,54 +722,97 @@ const ModernRoleBasedPlanForm: React.FC<ModernRoleBasedPlanFormProps> = ({ initi
                 {formErrors.calculationType && <FormHelperText>{formErrors.calculationType}</FormHelperText>}
               </FormControl>
 
-              <TextField
-                fullWidth
-                label="Incentive Value *"
-                type="number"
-                value={incentiveValue}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setIncentiveValue(value === '' ? '' : Number(value));
-                }}
-                error={!!formErrors.incentiveValue}
-                helperText={formErrors.incentiveValue || (
-                  calculationType === IncentiveCalculationType.PercentageOnTarget
-                    ? 'Enter percentage value (0-100)'
-                    : `Enter fixed amount (${currencyType === CurrencyType.Rupees ? '₹' : '$'})`
-                )}
-                // Note: We're using InputProps despite the deprecation warning
-                // because it's the only way to add endAdornment in MUI v5
-                // This will be updated when we migrate to MUI v6
-                InputProps={{
-                  endAdornment: calculationType === IncentiveCalculationType.PercentageOnTarget ? '%' : null,
-                  inputProps: {
-                    min: 0,
-                    max: calculationType === IncentiveCalculationType.PercentageOnTarget ? 100 : undefined,
-                    step: calculationType === IncentiveCalculationType.PercentageOnTarget ? 0.1 : 1
-                  }
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    '&:hover fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: '#00b8a9',
-                    },
-                  }
-                }}
+              {calculationType === IncentiveCalculationType.FixedAmount ? (
+                <TextField
+                  fullWidth
+                  label="Incentive Amount *"
+                  type="number"
+                  value={incentiveValue}
+                  onChange={(e) => setIncentiveValue(e.target.value === '' ? '' : Number(e.target.value))}
+                  error={!!formErrors.incentiveValue}
+                  helperText={formErrors.incentiveValue || `Enter fixed amount (${currencyType === CurrencyType.Rupees ? '₹' : '$'})`}
+                  // Note: We're using InputProps despite the deprecation warning
+                  // because it's the only way to add endAdornment in MUI v5
+                  // This will be updated when we migrate to MUI v6
+                  InputProps={{
+                    inputProps: { min: 0 }
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': {
+                        borderColor: '#00b8a9',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#00b8a9',
+                      },
+                    }
+                  }}
+                />
+              ) : (
+                <TextField
+                  fullWidth
+                  label="Incentive Percentage *"
+                  type="number"
+                  value={incentiveValue}
+                  onChange={(e) => setIncentiveValue(e.target.value === '' ? '' : Number(e.target.value))}
+                  error={!!formErrors.incentiveValue}
+                  helperText={formErrors.incentiveValue || 'Enter percentage value (0-100)'}
+                  // Note: We're using InputProps despite the deprecation warning
+                  // because it's the only way to add endAdornment in MUI v5
+                  // This will be updated when we migrate to MUI v6
+                  InputProps={{
+                    endAdornment: '%',
+                    inputProps: { min: 0, max: 100, step: 0.1 }
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '&:hover fieldset': {
+                        borderColor: '#00b8a9',
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: '#00b8a9',
+                      },
+                    }
+                  }}
+                />
+              )}
+
+              <Divider sx={{ my: 2 }} />
+
+              <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 500 }}>
+                Additional Options
+              </Typography>
+
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={incentiveAfterExceedingTarget}
+                    onChange={(e) => setIncentiveAfterExceedingTarget(e.target.checked)}
+                    sx={{
+                      color: '#00b8a9',
+                      '&.Mui-checked': {
+                        color: '#00b8a9',
+                      },
+                    }}
+                  />
+                }
+                label="Provide incentive after exceeding target"
+                sx={{ display: 'block', mb: 1 }}
               />
 
-              <Box sx={{ mt: 2 }}>
-                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
-                  Options
-                </Typography>
-
+              <Box sx={{ mb: 2 }}>
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={isCumulative}
-                      onChange={(e) => setIsCumulative(e.target.checked)}
+                      checked={provideAdditionalIncentiveOnExceeding}
+                      onChange={(e) => {
+                        setProvideAdditionalIncentiveOnExceeding(e.target.checked);
+
+                        // Reset additional incentive percentage if checkbox is unchecked
+                        if (!e.target.checked) {
+                          setAdditionalIncentivePercentage('');
+                        }
+                      }}
                       sx={{
                         color: '#00b8a9',
                         '&.Mui-checked': {
@@ -606,83 +821,56 @@ const ModernRoleBasedPlanForm: React.FC<ModernRoleBasedPlanFormProps> = ({ initi
                       }}
                     />
                   }
-                  label={
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      Cumulative
-                      {renderTooltip('When enabled, incentives are calculated cumulatively across periods')}
-                    </Box>
-                  }
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    mb: 1,
-                    '& .MuiFormControlLabel-label': {
-                      display: 'flex',
-                      alignItems: 'center'
-                    }
-                  }}
+                  label="Provide additional incentive on exceeding target"
+                  sx={{ display: 'block', mb: 1 }}
                 />
 
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={incentiveAfterExceedingTarget}
-                      onChange={(e) => setIncentiveAfterExceedingTarget(e.target.checked)}
+                {provideAdditionalIncentiveOnExceeding && (
+                  <Box sx={{ ml: 4, mt: 1 }}>
+                    <TextField
+                      fullWidth
+                      label="Additional Incentive Percentage (%)"
+                      type="number"
+                      value={additionalIncentivePercentage}
+                      onChange={(e) => setAdditionalIncentivePercentage(e.target.value === '' ? '' : Number(e.target.value))}
+                      error={!!formErrors.additionalIncentivePercentage}
+                      helperText={formErrors.additionalIncentivePercentage || 'Percentage of additional incentive to be given on the exceeded amount'}
+                      // Using min/max attributes on the input
+                      // InputProps is deprecated but still works
+                      InputProps={{
+                        inputProps: { min: 0, max: 100 }
+                      }}
                       sx={{
-                        color: '#00b8a9',
-                        '&.Mui-checked': {
-                          color: '#00b8a9',
-                        },
+                        '& .MuiOutlinedInput-root': {
+                          '&:hover fieldset': {
+                            borderColor: '#00b8a9',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: '#00b8a9',
+                          },
+                        }
                       }}
                     />
-                  }
-                  label={
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      Incentive After Exceeding Target
-                      {renderTooltip('When enabled, incentives continue to be earned after exceeding the target')}
-                    </Box>
-                  }
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    mb: 1,
-                    '& .MuiFormControlLabel-label': {
-                      display: 'flex',
-                      alignItems: 'center'
-                    }
-                  }}
-                />
-
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={includeSalaryInTarget}
-                      onChange={(e) => setIncludeSalaryInTarget(e.target.checked)}
-                      sx={{
-                        color: '#00b8a9',
-                        '&.Mui-checked': {
-                          color: '#00b8a9',
-                        },
-                      }}
-                    />
-                  }
-                  label={
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      Include Salary in Calculation
-                      {renderTooltip('When enabled, base salary is included in target calculations')}
-                    </Box>
-                  }
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    mb: 1,
-                    '& .MuiFormControlLabel-label': {
-                      display: 'flex',
-                      alignItems: 'center'
-                    }
-                  }}
-                />
+                  </Box>
+                )}
               </Box>
+
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={includeSalaryInTarget}
+                    onChange={(e) => setIncludeSalaryInTarget(e.target.checked)}
+                    sx={{
+                      color: '#00b8a9',
+                      '&.Mui-checked': {
+                        color: '#00b8a9',
+                      },
+                    }}
+                  />
+                }
+                label="Include salary in target calculation"
+                sx={{ display: 'block' }}
+              />
             </Stack>
           </CardContent>
         </Card>

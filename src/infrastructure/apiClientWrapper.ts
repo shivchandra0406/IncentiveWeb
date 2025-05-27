@@ -71,6 +71,7 @@ function processResponseData(data: any): any {
         } else if (key === 'currencyType') {
           result[key] = getCurrencyTypeFromNumeric(value);
         } else if (key === 'status' && typeof value === 'number') {
+          result[key] = getDealStatusFromNumeric(value);
           // Determine which status enum to use based on context
           if (key.includes('incentivePlan') || key.includes('plan')) {
             result[key] = getIncentivePlanStatusFromNumeric(value);

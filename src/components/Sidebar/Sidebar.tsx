@@ -17,6 +17,7 @@ import {
   People as PeopleIcon,
   Description as DescriptionIcon,
   Business as BusinessIcon,
+  Apartment as ApartmentIcon,
   Payment as PaymentIcon,
   AccountTree as AccountTreeIcon,
   Settings as SettingsIcon
@@ -151,6 +152,12 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, variant }) => {
       text: 'Deals',
       icon: <BusinessIcon />,
       path: '/deals',
+      roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.AGENT, UserRole.READONLY]
+    },
+    {
+      text: 'Projects',
+      icon: <ApartmentIcon />,
+      path: '/projects',
       roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.AGENT, UserRole.READONLY]
     },
     {

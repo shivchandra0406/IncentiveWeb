@@ -1,0 +1,21 @@
+// src/styles/angular-styles.scss
+
+@import 'bootstrap/scss/bootstrap';
+@import 'ag-grid-community/styles/ag-grid.css';
+@import 'ag-grid-community/styles/ag-theme-alpine.css';
+
+// These two are Angular-specific and not usable in React. Replace with React alternatives.
+// @import "~@danielmoncada/angular-datetime-picker/assets/style/picker.min.css";
+// @import "~@ng-select/ng-select/themes/material.theme.css";
+
+.dropzone {
+  height: 200px;
+  display: table;
+  width: 100%;
+  background-color: #eee;
+  border: dotted 1px #aaa;
+}
+
+input[type='file'] {
+  display: none;
+}

@@ -1,5 +1,6 @@
 import enhancedApiClient from '../apiClientWrapper';
 import type { EnhancedIncentivePlanService } from '../../core/services/EnhancedIncentivePlanService';
+import { convertEnumValuesToNumeric } from '../../utils/enumMappers';
 import type {
   IncentivePlanBase,
   TargetBasedIncentivePlan,
@@ -97,32 +98,21 @@ class IncentivePlanServiceImpl implements EnhancedIncentivePlanService {
 
   async getProjectBasedPlanById(id: string): Promise<IncentivePlanResponse<ProjectBasedIncentivePlan>> {
     try {
-      // Try the API endpoint with /api prefix first
-      console.log(`Calling API: GET /api/incentive-plans/${id}`);
-      const response = await enhancedApiClient.get<IncentivePlanResponse<ProjectBasedIncentivePlan>>(`/api/incentive-plans/${id}`);
+      // Use the common endpoint for fetching plan details
+      console.log(`Calling API: GET /incentive-plans/${id}`);
+      const response = await enhancedApiClient.get<IncentivePlanResponse<ProjectBasedIncentivePlan>>(`/incentive-plans/${id}`);
       console.log('API response:', response.data);
       return response.data;
     } catch (error: any) {
-      console.error('Error fetching project-based plan from /api endpoint:', error);
+      console.error('Error fetching project-based plan:', error);
       console.error('Error response:', error.response?.data);
 
-      // If the first endpoint fails, try the alternative endpoint
-      try {
-        console.log(`Retrying with alternative endpoint: GET /incentive-plans/${id}`);
-        const response = await enhancedApiClient.get<IncentivePlanResponse<ProjectBasedIncentivePlan>>(`/incentive-plans/${id}`);
-        console.log('API response from alternative endpoint:', response.data);
-        return response.data;
-      } catch (retryError: any) {
-        console.error('Error fetching project-based plan from alternative endpoint:', retryError);
-        console.error('Error response from alternative endpoint:', retryError.response?.data);
-
-        // Return a failed response
-        return {
-          succeeded: false,
-          message: retryError.response?.data?.message || retryError.message || 'Failed to fetch project-based plan',
-          data: null as any // This is correct for IncentivePlanResponse which has a data property
-        };
-      }
+      // Return a failed response
+      return {
+        succeeded: false,
+        message: error.response?.data?.message || error.message || 'Failed to fetch project-based plan',
+        data: null as any // This is correct for IncentivePlanResponse which has a data property
+      };
     }
   }
 
@@ -168,61 +158,78 @@ class IncentivePlanServiceImpl implements EnhancedIncentivePlanService {
 
   // Create incentive plans
   async createTargetBasedPlan(plan: CreateTargetBasedIncentivePlanRequest): Promise<CreateIncentivePlanResponse> {
-    const response = await enhancedApiClient.post<CreateIncentivePlanResponse>('/incentive-plans/target-based', plan);
+    // Convert enum string values to numeric values for API
+    const convertedPlan = convertEnumValuesToNumeric(plan);
+    console.log('Original plan data:', plan);
+    console.log('Converted plan data with numeric enums:', convertedPlan);
+
+    const response = await enhancedApiClient.post<CreateIncentivePlanResponse>('/incentive-plans/target-based', convertedPlan);
     return response.data;
   }
 
   async createRoleBasedPlan(plan: CreateRoleBasedIncentivePlanRequest): Promise<CreateIncentivePlanResponse> {
-    const response = await enhancedApiClient.post<CreateIncentivePlanResponse>('/incentive-plans/role-based', plan);
+    // Convert enum string values to numeric values for API
+    const convertedPlan = convertEnumValuesToNumeric(plan);
+    console.log('Original plan data:', plan);
+    console.log('Converted plan data with numeric enums:', convertedPlan);
+
+    const response = await enhancedApiClient.post<CreateIncentivePlanResponse>('/incentive-plans/role-based', convertedPlan);
     return response.data;
   }
 
   async createProjectBasedPlan(plan: CreateProjectBasedIncentivePlanRequest): Promise<CreateIncentivePlanResponse> {
     try {
-      console.log('Creating project-based plan with data:', plan);
-      const response = await enhancedApiClient.post<CreateIncentivePlanResponse>('/api/incentive-plans/project-based', plan);
+      // Convert enum string values to numeric values for API
+      const convertedPlan = convertEnumValuesToNumeric(plan);
+      console.log('Original project-based plan data:', plan);
+      console.log('Converted project-based plan data with numeric enums:', convertedPlan);
+
+      const response = await enhancedApiClient.post<CreateIncentivePlanResponse>('/incentive-plans/project-based', convertedPlan);
       console.log('Create project-based plan response:', response.data);
       return response.data;
     } catch (error: any) {
       console.error('Error creating project-based plan:', error);
       console.error('Error response:', error.response?.data);
-
-      // If the first endpoint fails, try the alternative endpoint
-      try {
-        console.log('Retrying with alternative endpoint: /incentive-plans/project-based');
-        const response = await enhancedApiClient.post<CreateIncentivePlanResponse>('/incentive-plans/project-based', plan);
-        console.log('Create project-based plan response from alternative endpoint:', response.data);
-        return response.data;
-      } catch (retryError: any) {
-        console.error('Error creating project-based plan with alternative endpoint:', retryError);
-        console.error('Error response from alternative endpoint:', retryError.response?.data);
-        return {
-          succeeded: false,
-          message: retryError.response?.data?.message || retryError.message || 'Failed to create project-based plan',
-          planId: ''
-        };
-      }
+      return {
+        succeeded: false,
+        message: error.response?.data?.message || error.message || 'Failed to create project-based plan',
+        planId: ''
+      };
     }
   }
 
   async createKickerPlan(plan: CreateKickerIncentivePlanRequest): Promise<CreateIncentivePlanResponse> {
-    const response = await enhancedApiClient.post<CreateIncentivePlanResponse>('/incentive-plans/kicker', plan);
+    // Convert enum string values to numeric values for API
+    const convertedPlan = convertEnumValuesToNumeric(plan);
+    console.log('Original kicker plan data:', plan);
+    console.log('Converted kicker plan data with numeric enums:', convertedPlan);
+
+    const response = await enhancedApiClient.post<CreateIncentivePlanResponse>('/incentive-plans/kicker', convertedPlan);
     return response.data;
   }
 
   async createTieredPlan(plan: CreateTieredIncentivePlanRequest): Promise<CreateIncentivePlanResponse> {
-    const response = await enhancedApiClient.post<CreateIncentivePlanResponse>('/incentive-plans/tiered-based', plan);
+    // Convert enum string values to numeric values for API
+    const convertedPlan = convertEnumValuesToNumeric(plan);
+    console.log('Original tiered plan data:', plan);
+    console.log('Converted tiered plan data with numeric enums:', convertedPlan);
+
+    const response = await enhancedApiClient.post<CreateIncentivePlanResponse>('/incentive-plans/tiered-based', convertedPlan);
     return response.data;
   }
 
   // Update incentive plans
   async updateTargetBasedPlan(id: string, plan: UpdateTargetBasedIncentivePlanRequest): Promise<CreateIncentivePlanResponse> {
     try {
+      // Convert enum string values to numeric values for API
+      const convertedPlan = convertEnumValuesToNumeric(plan);
+
       // Use the type-specific endpoint for target-based plans
       console.log(`Calling API: PUT /incentive-plans/target-based/${id}`);
-      console.log('Request payload:', plan);
+      console.log('Original request payload:', plan);
+      console.log('Converted request payload with numeric enums:', convertedPlan);
 
-      const response = await enhancedApiClient.put<CreateIncentivePlanResponse>(`/incentive-plans/target-based/${id}`, plan);
+      const response = await enhancedApiClient.put<CreateIncentivePlanResponse>(`/incentive-plans/target-based/${id}`, convertedPlan);
 
       console.log('API response:', response.data);
       return response.data;
@@ -240,49 +247,55 @@ class IncentivePlanServiceImpl implements EnhancedIncentivePlanService {
   }
 
   async updateRoleBasedPlan(id: string, plan: UpdateRoleBasedIncentivePlanRequest): Promise<CreateIncentivePlanResponse> {
-    const response = await enhancedApiClient.put<CreateIncentivePlanResponse>(`/incentive-plans/role-based/${id}`, plan);
+    // Convert enum string values to numeric values for API
+    const convertedPlan = convertEnumValuesToNumeric(plan);
+    console.log('Original role-based plan data:', plan);
+    console.log('Converted role-based plan data with numeric enums:', convertedPlan);
+
+    const response = await enhancedApiClient.put<CreateIncentivePlanResponse>(`/incentive-plans/role-based/${id}`, convertedPlan);
     return response.data;
   }
 
   async updateProjectBasedPlan(id: string, plan: UpdateProjectBasedIncentivePlanRequest): Promise<CreateIncentivePlanResponse> {
     try {
-      console.log(`Updating project-based plan with ID ${id}:`, plan);
-      const response = await enhancedApiClient.put<CreateIncentivePlanResponse>(`/api/incentive-plans/project-based/${id}`, plan);
+      // Convert enum string values to numeric values for API
+      const convertedPlan = convertEnumValuesToNumeric(plan);
+      console.log(`Original project-based plan with ID ${id}:`, plan);
+      console.log('Converted project-based plan data with numeric enums:', convertedPlan);
+
+      const response = await enhancedApiClient.put<CreateIncentivePlanResponse>(`/incentive-plans/project-based/${id}`, convertedPlan);
       console.log('Update project-based plan response:', response.data);
       return response.data;
     } catch (error: any) {
       console.error('Error updating project-based plan:', error);
       console.error('Error response:', error.response?.data);
-
-      // If the first endpoint fails, try the alternative endpoint
-      try {
-        console.log(`Retrying with alternative endpoint: /incentive-plans/project-based/${id}`);
-        const response = await enhancedApiClient.put<CreateIncentivePlanResponse>(`/incentive-plans/project-based/${id}`, plan);
-        console.log('Update project-based plan response from alternative endpoint:', response.data);
-        return response.data;
-      } catch (retryError: any) {
-        console.error('Error updating project-based plan with alternative endpoint:', retryError);
-        console.error('Error response from alternative endpoint:', retryError.response?.data);
-        return {
-          succeeded: false,
-          message: retryError.response?.data?.message || retryError.message || 'Failed to update project-based plan',
-          planId: ''
-        };
-      }
+      return {
+        succeeded: false,
+        message: error.response?.data?.message || error.message || 'Failed to update project-based plan',
+        planId: ''
+      };
     }
   }
 
   async updateKickerPlan(id: string, plan: UpdateKickerIncentivePlanRequest): Promise<CreateIncentivePlanResponse> {
-    const response = await enhancedApiClient.put<CreateIncentivePlanResponse>(`/incentive-plans/kicker/${id}`, plan);
+    // Convert enum string values to numeric values for API
+    const convertedPlan = convertEnumValuesToNumeric(plan);
+    console.log('Original kicker plan data:', plan);
+    console.log('Converted kicker plan data with numeric enums:', convertedPlan);
+
+    const response = await enhancedApiClient.put<CreateIncentivePlanResponse>(`/incentive-plans/kicker/${id}`, convertedPlan);
     return response.data;
   }
 
   async updateTieredPlan(id: string, plan: UpdateTieredIncentivePlanRequest): Promise<CreateIncentivePlanResponse> {
     try {
+      // Convert enum string values to numeric values for API
+      const convertedPlan = convertEnumValuesToNumeric(plan);
       console.log(`Calling API: PUT /incentive-plans/tiered-based/${id}`);
-      console.log('Request payload:', plan);
+      console.log('Original request payload:', plan);
+      console.log('Converted request payload with numeric enums:', convertedPlan);
 
-      const response = await enhancedApiClient.put<CreateIncentivePlanResponse>(`/incentive-plans/tiered-based/${id}`, plan);
+      const response = await enhancedApiClient.put<CreateIncentivePlanResponse>(`/incentive-plans/tiered-based/${id}`, convertedPlan);
 
       console.log('API response:', response.data);
       return response.data;

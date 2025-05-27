@@ -70,7 +70,7 @@ export interface TargetBasedIncentivePlan extends IncentivePlanBase {
   incentiveAfterExceedingTarget: boolean;
   includeSalaryInTarget: boolean;
   provideAdditionalIncentiveOnExceeding?: boolean;
-  additionalIncentivePercentage?: number;
+  additionalIncentiveOnExceeding?: number;
 }
 
 // Role-Based Incentive Plan
@@ -88,6 +88,8 @@ export interface RoleBasedIncentivePlan extends IncentivePlanBase {
   isCumulative: boolean;
   incentiveAfterExceedingTarget: boolean;
   includeSalaryInTarget: boolean;
+  provideAdditionalIncentiveOnExceeding?: boolean;
+  additionalIncentiveOnExceeding?: number;
 }
 
 // Project-Based Incentive Plan
@@ -104,14 +106,18 @@ export interface ProjectBasedIncentivePlan extends IncentivePlanBase {
 
 // Kicker-Based Incentive Plan
 export interface KickerIncentivePlan extends IncentivePlanBase {
-  location: string;
+  targetType: TargetType;
+  salary?: number;
   metricType: MetricType;
   targetValue: number;
+  calculationType: IncentiveCalculationType;
+  incentiveValue: number;
   consistencyMonths: number;
   awardType: AwardType;
   awardValue?: number;
   currencyType: CurrencyType;
   giftDescription?: string;
+  location?: string;
 }
 
 // Tiered-Based Incentive Plan
@@ -134,6 +140,23 @@ export interface Project {
   id: string;
   name: string;
   description: string;
+  location?: string;
+  propertyType?: string;
+  price?: number;
+  area?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  dateListed?: string;
+  status?: string;
+  agentName?: string;
+  agentContact?: string;
+  imagesMedia?: string;
+  amenities?: string;
+  yearBuilt?: number;
+  ownershipDetails?: string;
+  listingExpiryDate?: string;
+  mlsListingId?: string;
+  totalValue?: number;
   isActive: boolean;
 }
 

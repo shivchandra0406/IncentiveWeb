@@ -27,16 +27,20 @@ const MainLayout: React.FC = () => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: { xs: 1, sm: 1 },
-          pl: { xs: 1, sm: 1 }, // Reduced left padding to minimize space between sidebar and content
-          pr: { xs: 1.5, sm: 2 }, // Keep right padding consistent
+          p: { xs: 0, sm: 0 },
+          pl: { xs: 0, sm: 0 }, // Remove padding to maximize available space
+          pr: { xs: 0, sm: 0 }, // Remove padding to maximize available space
           width: { sm: `calc(100% - 230px)` },
           minHeight: '100vh',
           backgroundColor: (theme) => theme.palette.background.default,
         }}
       >
         <Toolbar /> {/* This creates space for the fixed AppBar */}
-        <Box sx={{ width: '100%' }}>
+        <Box sx={{
+          width: '100%',
+          maxWidth: '100%',
+          px: { xs: 2, sm: 3, md: 4 } // Add horizontal padding (left and right)
+        }}>
           <Outlet />
         </Box>
       </Box>

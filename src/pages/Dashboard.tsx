@@ -187,8 +187,8 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <Box sx={{ bgcolor: '#f7f7f7', minHeight: '100%', py: 2 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+    <Box sx={{ bgcolor: '#f7f7f7', minHeight: '100%', py: 2, width: '100%', maxWidth: '100%' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, px: { xs: 2, sm: 3 } }}>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Button
             variant="outlined"
@@ -297,17 +297,18 @@ const Dashboard: React.FC = () => {
       </Menu>
 
       {/* Stats Cards */}
-      <Grid container spacing={3} sx={{ mb: 4, mt: 1 }}>
-        <Grid item xs={12} sm={6} md={3}>
+      <Grid container spacing={2} sx={{ mb: 4, mt: 1, px: { xs: 2, sm: 3 }, justifyContent: 'flex-start' }}>
+        <Grid item xs={12} sm={6} md={4} lg={3} xl={3}>
           <Paper
             elevation={0}
             sx={{
-              p: 2,
+              p: 3,
               height: '100%',
               borderRadius: 2,
               border: '1px solid #e0e0e0',
               display: 'flex',
-              flexDirection: 'column'
+              flexDirection: 'column',
+              bgcolor: 'white'
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
@@ -345,7 +346,7 @@ const Dashboard: React.FC = () => {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={4} lg={3} xl={3}>
           <Paper
             elevation={0}
             sx={{
@@ -392,7 +393,7 @@ const Dashboard: React.FC = () => {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={4} lg={3} xl={3}>
           <Paper
             elevation={0}
             sx={{
@@ -439,7 +440,7 @@ const Dashboard: React.FC = () => {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={4} lg={3} xl={3}>
           <Paper
             elevation={0}
             sx={{
@@ -485,20 +486,112 @@ const Dashboard: React.FC = () => {
             </Typography>
           </Paper>
         </Grid>
+
+        {/* Additional Stats Card for larger screens */}
+        <Grid item xs={12} sm={6} md={4} lg={3} xl={3}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2,
+              height: '100%',
+              borderRadius: 2,
+              border: '1px solid #e0e0e0',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+              <Box
+                sx={{
+                  mr: 2,
+                  bgcolor: 'rgba(255, 152, 0, 0.1)',
+                  p: 1,
+                  borderRadius: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <TrendingUp color="warning" />
+              </Box>
+              <Typography variant="subtitle2" color="textSecondary">
+                Conversion Rate
+              </Typography>
+            </Box>
+            <Typography variant="h4" component="div" sx={{ mb: 1, fontWeight: 'bold' }}>
+              68%
+            </Typography>
+            <Typography
+              variant="body2"
+              color="success.main"
+              sx={{ display: 'flex', alignItems: 'center' }}
+            >
+              <TrendingUp fontSize="small" sx={{ mr: 0.5 }} />
+              +5% from last {timeRange}
+            </Typography>
+          </Paper>
+        </Grid>
+
+        {/* Additional Stats Card for larger screens */}
+        <Grid item xs={12} sm={6} md={4} lg={3} xl={3}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2,
+              height: '100%',
+              borderRadius: 2,
+              border: '1px solid #e0e0e0',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+              <Box
+                sx={{
+                  mr: 2,
+                  bgcolor: 'rgba(233, 30, 99, 0.1)',
+                  p: 1,
+                  borderRadius: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Assignment color="error" />
+              </Box>
+              <Typography variant="subtitle2" color="textSecondary">
+                Pending Approvals
+              </Typography>
+            </Box>
+            <Typography variant="h4" component="div" sx={{ mb: 1, fontWeight: 'bold' }}>
+              12
+            </Typography>
+            <Typography
+              variant="body2"
+              color="error.main"
+              sx={{ display: 'flex', alignItems: 'center' }}
+            >
+              <TrendingUp fontSize="small" sx={{ mr: 0.5 }} />
+              +3 from last {timeRange}
+            </Typography>
+          </Paper>
+        </Grid>
       </Grid>
 
-      <Grid container spacing={3}>
+      <Grid container spacing={2} sx={{ px: { xs: 2, sm: 3 }, justifyContent: 'flex-start' }}>
         {/* Recent Deals */}
-        <Grid item xs={12} md={6} lg={4}>
+        <Grid item xs={12} sm={12} md={6} lg={4} xl={4}>
           <Paper
             elevation={0}
             sx={{
               borderRadius: 2,
               border: '1px solid #e0e0e0',
-              overflow: 'hidden'
+              overflow: 'hidden',
+              height: '100%',
+              bgcolor: 'white'
             }}
           >
-            <Box sx={{ p: 2, bgcolor: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box sx={{ p: 3, bgcolor: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="h6" fontWeight="medium">Recent Deals</Typography>
               <Box>
                 <Tabs
@@ -534,7 +627,7 @@ const Dashboard: React.FC = () => {
             <Divider />
             <Box sx={{ p: 0 }}>
               <List disablePadding>
-                <ListItem sx={{ px: 2, py: 1.5 }}>
+                <ListItem sx={{ px: 3, py: 2 }}>
                   <ListItemText
                     primary={
                       <Typography variant="subtitle2" fontWeight="medium">Enterprise Software Deal</Typography>
@@ -562,7 +655,7 @@ const Dashboard: React.FC = () => {
                 </ListItem>
                 <Divider />
 
-                <ListItem sx={{ px: 2, py: 1.5 }}>
+                <ListItem sx={{ px: 3, py: 2 }}>
                   <ListItemText
                     primary={
                       <Typography variant="subtitle2" fontWeight="medium">Cloud Migration Project</Typography>
@@ -590,7 +683,7 @@ const Dashboard: React.FC = () => {
                 </ListItem>
                 <Divider />
 
-                <ListItem sx={{ px: 2, py: 1.5 }}>
+                <ListItem sx={{ px: 3, py: 2 }}>
                   <ListItemText
                     primary={
                       <Typography variant="subtitle2" fontWeight="medium">Security Upgrade</Typography>
@@ -618,7 +711,7 @@ const Dashboard: React.FC = () => {
                 </ListItem>
                 <Divider />
 
-                <ListItem sx={{ px: 2, py: 1.5 }}>
+                <ListItem sx={{ px: 3, py: 2 }}>
                   <ListItemText
                     primary={
                       <Typography variant="subtitle2" fontWeight="medium">Hardware Refresh</Typography>
@@ -650,16 +743,18 @@ const Dashboard: React.FC = () => {
         </Grid>
 
         {/* Top Performers */}
-        <Grid item xs={12} md={6} lg={4}>
+        <Grid item xs={12} sm={12} md={6} lg={4} xl={4}>
           <Paper
             elevation={0}
             sx={{
               borderRadius: 2,
               border: '1px solid #e0e0e0',
-              overflow: 'hidden'
+              overflow: 'hidden',
+              height: '100%',
+              bgcolor: 'white'
             }}
           >
-            <Box sx={{ p: 2, bgcolor: 'white' }}>
+            <Box sx={{ p: 3, bgcolor: 'white' }}>
               <Typography variant="h6" fontWeight="medium">Top Performers</Typography>
             </Box>
             <Divider />
@@ -667,7 +762,7 @@ const Dashboard: React.FC = () => {
               <List disablePadding>
                 {topPerformers.map((performer, index) => (
                   <React.Fragment key={performer.id}>
-                    <ListItem sx={{ px: 2, py: 1.5 }}>
+                    <ListItem sx={{ px: 3, py: 2 }}>
                       <ListItemAvatar>
                         <Avatar sx={{ bgcolor: 'primary.main' }}>{performer.avatar}</Avatar>
                       </ListItemAvatar>
@@ -691,20 +786,22 @@ const Dashboard: React.FC = () => {
         </Grid>
 
         {/* Incentive Progress */}
-        <Grid item xs={12} md={12} lg={4}>
+        <Grid item xs={12} sm={12} md={6} lg={4} xl={4}>
           <Paper
             elevation={0}
             sx={{
               borderRadius: 2,
               border: '1px solid #e0e0e0',
-              overflow: 'hidden'
+              overflow: 'hidden',
+              height: '100%',
+              bgcolor: 'white'
             }}
           >
-            <Box sx={{ p: 2, bgcolor: 'white' }}>
+            <Box sx={{ p: 3, bgcolor: 'white' }}>
               <Typography variant="h6" fontWeight="medium">Incentive Progress</Typography>
             </Box>
             <Divider />
-            <Box sx={{ p: 2 }}>
+            <Box sx={{ p: 3 }}>
               <Grid container spacing={2}>
                 {incentiveProgress.map((item) => (
                   <Grid item xs={12} key={item.id}>
@@ -732,6 +829,95 @@ const Dashboard: React.FC = () => {
                   </Grid>
                 ))}
               </Grid>
+            </Box>
+          </Paper>
+        </Grid>
+
+        {/* Additional Widget for larger screens */}
+        <Grid item xs={12} sm={12} md={6} lg={4} xl={4}>
+          <Paper
+            elevation={0}
+            sx={{
+              borderRadius: 2,
+              border: '1px solid #e0e0e0',
+              overflow: 'hidden',
+              height: '100%',
+              bgcolor: 'white'
+            }}
+          >
+            <Box sx={{ p: 3, bgcolor: 'white' }}>
+              <Typography variant="h6" fontWeight="medium">Upcoming Payouts</Typography>
+            </Box>
+            <Divider />
+            <Box sx={{ p: 0 }}>
+              <List disablePadding>
+                <ListItem sx={{ px: 3, py: 2 }}>
+                  <ListItemAvatar>
+                    <Avatar sx={{ bgcolor: 'success.light', color: 'success.dark' }}>JD</Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={
+                      <Typography variant="subtitle2" fontWeight="medium">John Doe</Typography>
+                    }
+                    secondary={
+                      <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                        <Typography variant="body2" color="textSecondary">$8,750 — Due in 3 days</Typography>
+                      </Box>
+                    }
+                  />
+                </ListItem>
+                <Divider />
+
+                <ListItem sx={{ px: 3, py: 2 }}>
+                  <ListItemAvatar>
+                    <Avatar sx={{ bgcolor: 'primary.light', color: 'primary.dark' }}>JS</Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={
+                      <Typography variant="subtitle2" fontWeight="medium">Jane Smith</Typography>
+                    }
+                    secondary={
+                      <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                        <Typography variant="body2" color="textSecondary">$12,300 — Due in 5 days</Typography>
+                      </Box>
+                    }
+                  />
+                </ListItem>
+                <Divider />
+
+                <ListItem sx={{ px: 3, py: 2 }}>
+                  <ListItemAvatar>
+                    <Avatar sx={{ bgcolor: 'warning.light', color: 'warning.dark' }}>EJ</Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={
+                      <Typography variant="subtitle2" fontWeight="medium">Emily Johnson</Typography>
+                    }
+                    secondary={
+                      <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                        <Typography variant="body2" color="textSecondary">$6,450 — Due in 7 days</Typography>
+                      </Box>
+                    }
+                  />
+                </ListItem>
+                <Divider />
+
+                <ListItem sx={{ px: 3, py: 2 }}>
+                  <ListItemAvatar>
+                    <Avatar sx={{ bgcolor: 'info.light', color: 'info.dark' }}>RB</Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={
+                      <Typography variant="subtitle2" fontWeight="medium">Robert Brown</Typography>
+                    }
+                    secondary={
+                      <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+                        <Typography variant="body2" color="textSecondary">$4,200 — Due in 10 days</Typography>
+                      </Box>
+                    }
+                  />
+                </ListItem>
+              </List>
             </Box>
           </Paper>
         </Grid>

@@ -12,6 +12,7 @@ const Roles = lazy(() => import('../../pages/Roles'));
 const Leads = lazy(() => import('../../pages/Leads'));
 const IncentivePlans = lazy(() => import('../../pages/IncentivePlans'));
 const Deals = lazy(() => import('../../pages/Deals'));
+const Projects = lazy(() => import('../../pages/Projects'));
 const Payouts = lazy(() => import('../../pages/Payouts'));
 const Workflows = lazy(() => import('../../pages/Workflows'));
 const Settings = lazy(() => import('../../pages/Settings'));
@@ -51,7 +52,8 @@ const AppRoutes: React.FC = () => {
           <Route path="roles" element={<Roles />} />
           <Route path="leads" element={<Leads />} />
           <Route path="incentive-plans/*" element={<IncentivePlans />} />
-          <Route path="deals" element={<Deals />} />
+          <Route path="deals/*" element={<Deals />} />
+          <Route path="projects/*" element={<Projects />} />
           <Route path="payouts" element={<Payouts />} />
           <Route path="workflows" element={<Workflows />} />
           <Route path="settings" element={<Settings />} />

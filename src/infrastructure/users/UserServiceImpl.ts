@@ -32,6 +32,11 @@ export class UserServiceImpl implements UserService {
     const response = await enhancedApiClient.get<UserResponse>(`/users/${id}`);
     return response.data;
   }
+  
+  async getUsersMinimal(): Promise<{succeeded: boolean, message: string, data: {id: string, name: string}[]}> {
+    const response = await enhancedApiClient.get<{succeeded: boolean, message: string, data: {id: string, name: string}[]}>('/Users/minimal');
+    return response.data;
+  }
 
   async createUser(userData: CreateUserRequest): Promise<UserResponseDto> {
     const response = await enhancedApiClient.post<UserResponseDto>('/users', userData);

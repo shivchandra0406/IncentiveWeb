@@ -4,7 +4,8 @@ import {
   MetricType,
   TargetType,
   IncentiveCalculationType,
-  AwardType
+  AwardType,
+  CurrencyType
 } from '../core/models/incentivePlanTypes';
 import {
   incentivePlanTypeToNumeric,
@@ -12,7 +13,9 @@ import {
   metricTypeToNumeric,
   targetTypeToNumeric,
   incentiveCalculationTypeToNumeric,
-  awardTypeToNumeric
+  awardTypeToNumeric,
+  currencyTypeToNumeric,
+  convertEnumValuesToNumeric
 } from './enumMappers';
 import { processRequestData } from '../infrastructure/apiClientWrapper';
 
@@ -55,5 +58,46 @@ export function testEnumMapping() {
   return processedData;
 }
 
-// Export the function to make it available for testing
-export default testEnumMapping;
+// Test for the new convertEnumValuesToNumeric function
+export function testConvertEnumValuesToNumeric() {
+  console.log('Testing convertEnumValuesToNumeric function...');
+
+  // Test data similar to the one provided
+  const testData = {
+    planName: "new Target based incentive",
+    planType: 0,
+    periodType: 1,
+    isActive: true,
+    targetType: 0,
+    salary: 25000,
+    metricType: 2,
+    targetValue: 124999,
+    calculationType: 1,
+    incentiveValue: 5,
+    currencyType: "Rupees",
+    isCumulative: false,
+    incentiveAfterExceedingTarget: false,
+    includeSalaryInTarget: false,
+    provideAdditionalIncentiveOnExceeding: true,
+    additionalIncentivePercentage: 6
+  };
+
+  // Run the test
+  console.log('Original data:', testData);
+  const convertedData = convertEnumValuesToNumeric(testData);
+  console.log('Converted data:', convertedData);
+
+  // Check if currencyType was converted correctly
+  console.log('CurrencyType converted correctly:',
+    typeof convertedData.currencyType === 'number' &&
+    convertedData.currencyType === 0
+  );
+
+  return convertedData;
+}
+
+// Export the functions to make them available for testing
+export default {
+  testEnumMapping,
+  testConvertEnumValuesToNumeric
+};
